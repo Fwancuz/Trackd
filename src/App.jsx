@@ -92,19 +92,19 @@ const App = () => {
 
   const addWorkout = async (workout) => {
     try {
+      const workoutToSave = {
+        user_id: user.id,
+        name: workout.name,
+        exercises: workout.exercises,
+      };
+
       const { data, error } = await supabase
         .from('workout_templates')
-        .insert([
-          {
-            user_id: user.id,
-            ...workout,
-            created_at: new Date().toISOString(),
-          },
-        ])
+        .insert([workoutToSave])
         .select();
 
       if (error) throw error;
-      setSavedWorkoutTemplates([...savedWorkoutTemplates, data[0]]);
+      setSavedWorkoutTemplates(prev => [...prev, data[0]]);
     } catch (error) {
       console.error('Error saving workout:', error);
     }
@@ -112,17 +112,16 @@ const App = () => {
 
   const completeWorkoutSession = async (workoutId, exerciseData, duration = 0) => {
     try {
-      const session = {
+      const sessionToSave = {
         user_id: user.id,
         workout_id: workoutId,
-        completed_at: new Date().toISOString(),
         exercises: exerciseData,
         duration: duration,
       };
 
       const { data, error } = await supabase
         .from('completed_sessions')
-        .insert([session])
+        .insert([sessionToSave])
         .select();
 
       if (error) throw error;
@@ -171,17 +170,16 @@ const App = () => {
 
   const addPersonalRecord = async (exercise, weight, reps) => {
     try {
-      const pr = {
+      const prToSave = {
         user_id: user.id,
         exercise: exercise,
         weight: parseFloat(weight) || 0,
         reps: parseFloat(reps) || 0,
-        created_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
         .from('personal_records')
-        .insert([pr])
+        .insert([prToSave])
         .select();
 
       if (error) throw error;
