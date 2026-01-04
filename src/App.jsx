@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import Aurora from './Aurora';
-import { VscHome, VscArchive, VscSettingsGear, VscSymbolMisc } from 'react-icons/vsc';
+import { VscHome, VscArchive, VscSettingsGear, VscSymbolMisc, VscSignOut } from 'react-icons/vsc';
 import Home from './Home';
 import CreateWorkout from './CreateWorkout';
 import AppSettings from './AppSettings';
 import PR from './PR';
 import { ToastProvider } from './ToastContext';
+import { useAuth } from './AuthProvider';
+import { supabase } from './supabaseClient';
 
 const App = () => {
+  const { user, logout } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
   const [workouts, setWorkouts] = useState([]);
@@ -16,40 +19,67 @@ const App = () => {
   const [personalRecords, setPersonalRecords] = useState([]);
   const [language, setLanguage] = useState('en');
   const [settings, setSettings] = useState({ language: 'en' });
+  const [loading, setLoading] = useState(true);
 
-  // Load completed sessions from localStorage on mount
+  // Load all user data from Supabase on mount
   useEffect(() => {
-    const savedSessions = localStorage.getItem('completedSessions');
-    if (savedSessions) {
-      try {
-        setCompletedSessions(JSON.parse(savedSessions));
-      } catch (e) {
-        console.error('Failed to load completed sessions:', e);
-      }
+    if (user) {
+      loadUserData();
     }
-  }, []);
+  }, [user]);
 
-  // Load personal records from localStorage on mount
-  useEffect(() => {
-    const savedPRs = localStorage.getItem('personalRecords');
-    if (savedPRs) {
-      try {
-        setPersonalRecords(JSON.parse(savedPRs));
-      } catch (e) {
-        console.error('Failed to load personal records:', e);
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load saved workout templates
+      const { data: templatesData, error: templatesError } = await supabase
+        .from('workout_templates')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (templatesError) throw templatesError;
+      setSavedWorkoutTemplates(templatesData || []);
+
+      // Load completed sessions
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from('completed_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('completed_at', { ascending: false });
+      
+      if (sessionsError) throw sessionsError;
+      setCompletedSessions(sessionsData || []);
+
+      // Load personal records
+      const { data: prsData, error: prsError } = await supabase
+        .from('personal_records')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (prsError) throw prsError;
+      setPersonalRecords(prsData || []);
+
+      // Load user settings
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
+      
+      if (settingsData) {
+        setSettings(settingsData.settings || { language: 'en' });
+        setLanguage(settingsData.settings?.language || 'en');
       }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  // Save completed sessions to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('completedSessions', JSON.stringify(completedSessions));
-  }, [completedSessions]);
-
-  // Save personal records to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('personalRecords', JSON.stringify(personalRecords));
-  }, [personalRecords]);
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -60,45 +90,120 @@ const App = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const addWorkout = (workout) => {
-    setSavedWorkoutTemplates([...savedWorkoutTemplates, workout]);
-  };
+  const addWorkout = async (workout) => {
+    try {
+      const { data, error } = await supabase
+        .from('workout_templates')
+        .insert([
+          {
+            user_id: user.id,
+            ...workout,
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .select();
 
-  const completeWorkoutSession = (workoutId, exerciseData, duration = 0) => {
-    const session = {
-      id: Date.now(),
-      workoutId: workoutId,
-      completedAt: new Date().toISOString(),
-      exercises: exerciseData,
-      duration: duration
-    };
-    setCompletedSessions([...completedSessions, session]);
-  };
-
-  const removeWorkout = (workoutId) => {
-    setSavedWorkoutTemplates(savedWorkoutTemplates.filter(w => w.id !== workoutId));
-  };
-
-  const updateSettings = (newSettings) => {
-    setSettings(newSettings);
-    if (newSettings.language) {
-      setLanguage(newSettings.language);
+      if (error) throw error;
+      setSavedWorkoutTemplates([...savedWorkoutTemplates, data[0]]);
+    } catch (error) {
+      console.error('Error saving workout:', error);
     }
   };
 
-  const addPersonalRecord = (exercise, weight, reps) => {
-    const pr = {
-      id: Date.now(),
-      exercise: exercise,
-      weight: parseFloat(weight) || 0,
-      reps: parseFloat(reps) || 0,
-      date: new Date().toISOString()
-    };
-    setPersonalRecords([...personalRecords, pr]);
+  const completeWorkoutSession = async (workoutId, exerciseData, duration = 0) => {
+    try {
+      const session = {
+        user_id: user.id,
+        workout_id: workoutId,
+        completed_at: new Date().toISOString(),
+        exercises: exerciseData,
+        duration: duration,
+      };
+
+      const { data, error } = await supabase
+        .from('completed_sessions')
+        .insert([session])
+        .select();
+
+      if (error) throw error;
+      setCompletedSessions([data[0], ...completedSessions]);
+    } catch (error) {
+      console.error('Error saving workout session:', error);
+    }
   };
 
-  const deletePersonalRecord = (prId) => {
-    setPersonalRecords(personalRecords.filter(pr => pr.id !== prId));
+  const removeWorkout = async (workoutId) => {
+    try {
+      const { error } = await supabase
+        .from('workout_templates')
+        .delete()
+        .eq('id', workoutId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSavedWorkoutTemplates(savedWorkoutTemplates.filter(w => w.id !== workoutId));
+    } catch (error) {
+      console.error('Error deleting workout:', error);
+    }
+  };
+
+  const updateSettings = async (newSettings) => {
+    try {
+      setSettings(newSettings);
+      if (newSettings.language) {
+        setLanguage(newSettings.language);
+      }
+
+      // Save settings to Supabase
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          settings: newSettings,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating settings:', error);
+    }
+  };
+
+  const addPersonalRecord = async (exercise, weight, reps) => {
+    try {
+      const pr = {
+        user_id: user.id,
+        exercise: exercise,
+        weight: parseFloat(weight) || 0,
+        reps: parseFloat(reps) || 0,
+        created_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('personal_records')
+        .insert([pr])
+        .select();
+
+      if (error) throw error;
+      setPersonalRecords([data[0], ...personalRecords]);
+    } catch (error) {
+      console.error('Error saving personal record:', error);
+    }
+  };
+
+  const deletePersonalRecord = async (prId) => {
+    try {
+      const { error } = await supabase
+        .from('personal_records')
+        .delete()
+        .eq('id', prId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setPersonalRecords(personalRecords.filter(pr => pr.id !== prId));
+    } catch (error) {
+      console.error('Error deleting personal record:', error);
+    }
   };
 
   const pages = {
@@ -107,6 +212,17 @@ const App = () => {
     records: <PR personalRecords={personalRecords} onAddPR={addPersonalRecord} onDeletePR={deletePersonalRecord} language={language} />,
     settings: <AppSettings settings={settings} updateSettings={updateSettings} />,
   };
+
+  if (loading) {
+    return (
+      <div className="app-main flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin mb-4">⚙️</div>
+          <p>Loading your workouts...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ToastProvider>
@@ -138,6 +254,10 @@ const App = () => {
           <div className="nav-item" onClick={() => setCurrentPage('settings')}>
             <span className="nav-icon"><VscSettingsGear size={18} /></span>
             <span className="nav-label">Settings</span>
+          </div>
+          <div className="nav-item" onClick={logout} title="Logout">
+            <span className="nav-icon"><VscSignOut size={18} /></span>
+            <span className="nav-label">Logout</span>
           </div>
         </nav>
       </div>
