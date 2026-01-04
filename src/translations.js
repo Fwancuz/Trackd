@@ -89,6 +89,9 @@ const translations = {
     english: 'English',
     polish: 'Polski',
     languageNote: 'Language settings will be applied throughout the app',
+    account: 'Account',
+    logout: 'Log Out',
+    logoutConfirm: 'Are you sure you want to log out?',
   },
   pl: {
     // App Navigation
@@ -180,6 +183,9 @@ const translations = {
     english: 'English',
     polish: 'Polski',
     languageNote: 'Ustawienia języka będą stosowane w całej aplikacji',
+    account: 'Konto',
+    logout: 'Wyloguj',
+    logoutConfirm: 'Czy na pewno chcesz się wylogować?',
   }
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Aurora from './Aurora';
-import { VscHome, VscArchive, VscSettingsGear, VscSymbolMisc, VscSignOut } from 'react-icons/vsc';
+import { VscHome, VscArchive, VscSettingsGear, VscSymbolMisc } from 'react-icons/vsc';
 import Home from './Home';
 import CreateWorkout from './CreateWorkout';
 import AppSettings from './AppSettings';
@@ -209,7 +209,7 @@ const App = () => {
     home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} />,
     create: <CreateWorkout addWorkout={addWorkout} language={language} />,
     records: <PR personalRecords={personalRecords} onAddPR={addPersonalRecord} onDeletePR={deletePersonalRecord} language={language} />,
-    settings: <AppSettings settings={settings} updateSettings={updateSettings} />,
+    settings: <AppSettings settings={settings} updateSettings={updateSettings} logout={logout} />,
   };
 
   if (loading) {
@@ -253,10 +253,6 @@ const App = () => {
           <div className="nav-item" onClick={() => setCurrentPage('settings')}>
             <span className="nav-icon"><VscSettingsGear size={18} /></span>
             <span className="nav-label">Settings</span>
-          </div>
-          <div className="nav-item" onClick={logout} title="Logout">
-            <span className="nav-icon"><VscSignOut size={18} /></span>
-            <span className="nav-label">Logout</span>
           </div>
         </nav>
       </div>
