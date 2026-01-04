@@ -46,7 +46,7 @@ const CreateWorkout = ({ addWorkout, language = 'en' }) => {
   return (
     <div className="ui-center">
       <div className="create-workout">
-        <h1 className="app-title">{t.createWorkout}</h1>
+        <h1 className="app-title">Trackd</h1>
         <input
           type="text"
           placeholder={t.workoutName}
@@ -58,7 +58,7 @@ const CreateWorkout = ({ addWorkout, language = 'en' }) => {
           {exercises.map((exercise, index) => (
             <div key={index} className="exercise-row">
               <div className="exercise-header">
-                <span className="exercise-number">Exercise {index + 1}</span>
+                <span className="exercise-number">{t.selectExercise} {index + 1}</span>
                 {exercises.length > 1 && (
                   <button
                     type="button"

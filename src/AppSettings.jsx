@@ -16,7 +16,7 @@ const AppSettings = ({ settings, updateSettings }) => {
   return (
     <div className="ui-center">
       <div className="app-settings">
-        <h1 className="app-title">{t.settingsTitle}</h1>
+        <h1 className="app-title">Trackd</h1>
         <div className="settings-content">
           <h2>{t.language}</h2>
           <div className="language-options">
@@ -26,7 +26,7 @@ const AppSettings = ({ settings, updateSettings }) => {
                 onClick={() => handleLanguageChange(lang.code)}
                 className={`language-btn ${settings.language === lang.code ? 'active' : ''}`}
               >
-                {lang.name}
+                {lang.code === 'en' ? t.english : t.polish}
               </button>
             ))}
           </div>

@@ -2214,3 +2214,151 @@ select.exercise-input option:hover {
   color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
 }
+
+/* ============================================
+   FLEXBOX & LAYOUT UTILITIES
+   ============================================ */
+
+/* Centered flex container for headers and cards */
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Button sizing for longer translations */
+.btn {
+  width: auto;
+  min-width: 120px;
+}
+
+/* Mobile responsive padding */
+@media (max-width: 768px) {
+  .ui-center {
+    padding: 0 16px;
+  }
+
+  .home-content,
+  .create-workout,
+  .progress-content,
+  .app-settings {
+    padding: 0 16px;
+  }
+
+  /* Ensure text doesn't touch screen edges */
+  .section-title,
+  .empty-state,
+  h2,
+  h3 {
+    padding: 0 16px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Flex wrap for PR labels to keep centered */
+  .exercise-selector {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+  }
+
+  .exercise-select-btn {
+    width: 100%;
+  }
+
+  .pr-stats-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .pr-stat {
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  /* Ensure buttons don't overflow on mobile */
+  .btn,
+  .language-btn,
+  .metric-btn {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .language-options {
+    grid-template-columns: 1fr;
+  }
+
+  /* Workout card responsive */
+  .workout-card {
+    padding: 1rem;
+  }
+
+  .workout-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .workout-card-title,
+  .workout-card-actions {
+    width: 100%;
+  }
+
+  /* Ensure exercise names wrap properly */
+  .exercise-brief {
+    flex-wrap: wrap;
+    word-break: break-word;
+  }
+
+  .exercise-name {
+    flex: 1 1 100%;
+    text-align: center;
+    padding: 0.25rem 0;
+  }
+
+  .exercise-specs {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .btn {
+    min-width: 140px;
+  }
+
+  .section-title,
+  .app-title {
+    padding: 0 24px;
+  }
+}
+
+/* Header centering */
+.app-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Ensure all form inputs have proper spacing */
+.workout-input,
+.exercise-input {
+  padding: 0.75rem 16px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Center content in modal-like containers */
+.progress-content,
+.app-settings,
+.create-workout {
+  margin-left: auto;
+  margin-right: auto;
+}

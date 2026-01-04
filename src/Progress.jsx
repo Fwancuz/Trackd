@@ -148,12 +148,12 @@ const Progress = ({ completedSessions, language = 'en' }) => {
                 stroke="#888"
                 domain={['dataMin - 1', 'dataMax + 1']}
                 tick={{ fontSize: 12 }}
-                label={{ value: selectedMetric === 'weight' ? 'lbs' : 'Reps', angle: -90, position: 'insideLeft', offset: 10 }}
+                label={{ value: selectedMetric === 'weight' ? 'kg' : 'Reps', angle: -90, position: 'insideLeft', offset: 10 }}
               />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #666', borderRadius: '4px' }}
                 labelStyle={{ color: '#fff' }}
-                formatter={(value) => [value, selectedMetric === 'weight' ? 'Weight (lbs)' : 'Reps']}
+                formatter={(value) => [value, selectedMetric === 'weight' ? 'Weight (kg)' : 'Reps']}
               />
               <Legend />
               <Line
@@ -162,7 +162,7 @@ const Progress = ({ completedSessions, language = 'en' }) => {
                 stroke="#3b82f6"
                 dot={{ fill: '#3b82f6', r: 5 }}
                 activeDot={{ r: 7 }}
-                name={selectedMetric === 'weight' ? 'Weight (lbs)' : 'Reps'}
+                name={selectedMetric === 'weight' ? 'Weight (kg)' : 'Reps'}
                 strokeWidth={3}
               />
             </LineChart>

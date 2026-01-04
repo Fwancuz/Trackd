@@ -22,7 +22,7 @@ const translations = {
     selectExercise: 'Select Exercise',
     sets: 'Sets',
     reps: 'Reps',
-    weightLbs: 'Weight (lbs)',
+    weightLbs: 'Weight (kg)',
     addExercise: 'Add Exercise',
     saveWorkout: 'Save Workout',
     workoutSaved: 'Workout saved!',
@@ -55,6 +55,7 @@ const translations = {
     cancelWorkoutMessage: 'Are you sure you want to cancel this workout? Your progress will not be saved.',
     yes: 'Yes',
     no: 'No',
+    back: 'Back',
     workoutCompleted: 'Workout completed!',
 
     // History Page
@@ -92,11 +93,12 @@ const translations = {
   pl: {
     // App Navigation
     home: 'Strona główna',
+    create: 'Utwórz',
     pr: 'PR',
     settings: 'Ustawienia',
 
     // Home Page
-    appTitle: 'Tracker Treningów na Telefon',
+    appTitle: 'Trackd',
     noWorkouts: 'Brak utworzonych treningów',
     startMessage: 'Utwórz trening w karcie Utwórz, aby rozpocząć!',
     yourWorkouts: 'Twoje Treningi',
@@ -144,6 +146,7 @@ const translations = {
     cancelWorkoutMessage: 'Czy na pewno chcesz anulować ten trening? Twoje postępy nie będą zapisane.',
     yes: 'Tak',
     no: 'Nie',
+    back: 'Wróć',
     workoutCompleted: 'Trening ukończony!',
 
     // History Page

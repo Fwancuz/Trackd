@@ -24,9 +24,13 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
       grouped[pr.exercise].push(pr);
     });
 
-    // Sort each exercise's records by date
+    // Sort each exercise's records by date (using created_at as primary field)
     Object.keys(grouped).forEach(exercise => {
-      grouped[exercise].sort((a, b) => new Date(b.date) - new Date(a.date));
+      grouped[exercise].sort((a, b) => {
+        const dateA = new Date(a.created_at || a.date || 0).getTime();
+        const dateB = new Date(b.created_at || b.date || 0).getTime();
+        return dateB - dateA;
+      });
     });
 
     return grouped;
@@ -64,14 +68,40 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
       return (
         <div className="ui-center">
           <div className="progress-content">
-            <h1 className="app-title">{t.personalRecords}</h1>
-            <p>{t.noPRsYet || 'No personal records yet.'}</p>
+            <h1 className="app-title">Trackd</h1>
+            <p>{t.noPRsYet}</p>
             <button 
               className="metric-btn large"
               onClick={() => setView('add')}
-              style={{ marginTop: '2rem' }}
+              style={{
+                marginTop: '2rem',
+                padding: '12px 24px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '12px',
+                color: '#fff',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxSizing: 'border-box',
+                maxWidth: '90%',
+                margin: '2rem auto 0'
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)';
+                e.currentTarget.style.opacity = '0.8';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.opacity = '1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.opacity = '1';
+              }}
             >
-              {t.addNewPR || 'Add Personal Record'}
+              {t.addNewPR}
             </button>
           </div>
         </div>
@@ -80,15 +110,41 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
 
     return (
       <div className="ui-center">
-        <div className="progress-content">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <h1 className="app-title">{t.personalRecords}</h1>
+        <div className="progress-content" style={{ padding: '0 16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <h1 className="app-title">Trackd</h1>
             <button 
               className="metric-btn"
               onClick={() => setView('add')}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+              style={{
+                width: '100%',
+                maxWidth: '300px',
+                padding: '10px 20px',
+                fontSize: '0.9rem',
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '12px',
+                color: '#fff',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxSizing: 'border-box'
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)';
+                e.currentTarget.style.opacity = '0.8';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.opacity = '1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.opacity = '1';
+              }}
             >
-              + {t.addNewPR || 'Add'}
+              + {t.addNewPR}
             </button>
           </div>
           
@@ -105,12 +161,12 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                   }}
                   style={{ textAlign: 'left', position: 'relative' }}
                 >
-                  <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1 }}>
                     <div>{exercise}</div>
                     <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>
-                      {latestPR.weight > 0 ? `${latestPR.weight} lbs` : ''} 
+                      {latestPR.weight > 0 ? `${latestPR.weight} kg` : ''} 
                       {latestPR.weight > 0 && latestPR.reps > 0 ? ' • ' : ''}
-                      {latestPR.reps > 0 ? `${latestPR.reps} reps` : ''}
+                      {latestPR.reps > 0 ? `${latestPR.reps} ${language === 'pl' ? 'pow.' : 'reps'}` : ''}
                     </div>
                   </div>
                 </button>
@@ -127,8 +183,8 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
     return (
       <div className="ui-center">
         <div className="progress-content">
-          <button className="back-btn" onClick={() => setView('list')}>← Back</button>
-          <h1 className="app-title">{t.addNewPR || 'Add Personal Record'}</h1>
+          <button className="back-btn" onClick={() => setView('list')}>← {t.back}</button>
+          <h1 className="app-title">Trackd</h1>
           
           <form onSubmit={handleAddPR} style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -155,7 +211,7 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ color: '#aaa', fontSize: '0.9rem' }}>{t.weightLbs}</label>
+                <label style={{ color: '#aaa', fontSize: '0.9rem' }}>{t.weight} (kg)</label>
                 <input
                   type="number"
                   step="0.5"
@@ -195,9 +251,34 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
             <button 
               type="submit"
               className="metric-btn large"
-              style={{ marginTop: '1rem' }}
+              style={{
+                marginTop: '1rem',
+                padding: '12px 24px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '12px',
+                color: '#fff',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxSizing: 'border-box',
+                width: '100%'
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)';
+                e.currentTarget.style.opacity = '0.8';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.opacity = '1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.opacity = '1';
+              }}
             >
-              {t.savePR || 'Save Record'}
+              {t.savePR}
             </button>
           </form>
         </div>
@@ -214,36 +295,81 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
       return (
         <div className="ui-center">
           <div className="progress-content">
-            <button className="back-btn" onClick={() => setView('list')}>← Back</button>
-            <h1 className="app-title">{t.noRecordsFound || 'No records found'}</h1>
+            <button className="back-btn" onClick={() => setView('list')}>← {t.back}</button>
+            <h1 className="app-title">Trackd</h1>
             <p style={{ marginTop: '1rem', color: '#888' }}>
-              {t.noRecordsYet || 'No personal records yet.'}
+              {t.noPRsYet}
             </p>
             <button 
               className="metric-btn large"
               onClick={() => setView('add')}
               style={{ marginTop: '2rem' }}
             >
-              {t.addNewPR || 'Add Personal Record'}
+              {t.addNewPR}
             </button>
           </div>
         </div>
       );
     }
     
-    // Create data for graph - sorted by date
-    const graphData = [...records].reverse();
+    // Brzycki formula for 1RM estimation: 1RM = weight × (1 + reps / 30)
+    const calculateEstimated1RM = (weight, reps) => {
+      if (weight === 0) return 0;
+      return weight * (1 + reps / 30);
+    };
+
+    // Prepare and format data for graph - convert types, sort chronologically
+    const graphData = [...records]
+      .map(r => {
+        const weight = Number(r.weight) || 0;
+        const reps = Number(r.reps) || 0;
+        const estimated1RM = calculateEstimated1RM(weight, reps);
+        return {
+          ...r,
+          weight,
+          reps,
+          estimated1RM,
+          date: r.created_at || r.date || new Date().toISOString(),
+        };
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    const maxWeight = Math.max(...records?.map(r => r?.weight), 0);
-    const maxReps = Math.max(...records?.map(r => r?.reps), 0);
+    const maxWeight = Math.max(...graphData.map(r => r.weight), 0);
+    const maxReps = Math.max(...graphData.map(r => r.reps), 0);
+    const max1RM = Math.max(...graphData.map(r => r.estimated1RM), 0);
+    const min1RM = Math.min(...graphData.map(r => r.estimated1RM > 0 ? r.estimated1RM : Infinity), max1RM);
+    
+    // Find Personal Best - record with highest estimated 1RM
+    const personalBest = graphData.reduce((best, current) => {
+      return current.estimated1RM > (best?.estimated1RM || 0) ? current : best;
+    }, null);
+    
+    // Helper function for safe date formatting
+    const formatDate = (dateStr) => {
+      try {
+        const d = new Date(dateStr);
+        return !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }) : '';
+      } catch {
+        return '';
+      }
+    };
+    
+    const formatFullDate = (dateStr) => {
+      try {
+        const d = new Date(dateStr);
+        return !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '';
+      } catch {
+        return '';
+      }
+    };
 
     return (
       <>
         <div className="ui-center">
-          <div className="progress-content">
+          <div className="progress-content" style={{ padding: '0 16px' }}>
             <div className="graph-header">
-            <button className="back-btn" onClick={() => setView('list')}>← Back</button>
-            <h1 className="app-title">{selectedExercise}</h1>
+            <button className="back-btn" onClick={() => setView('list')}>← {t.back}</button>
+            <h1 className="app-title">Trackd</h1>
           </div>
 
           <div className="exercise-graph-card full-width">
@@ -251,7 +377,7 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
               <div className="pr-stat">
                 <span className="stat-label">{t.maxWeight || 'Max Weight'}</span>
                 <span className="pr-value">{maxWeight}</span>
-                <span className="stat-sublabel">lbs</span>
+                <span className="stat-sublabel">kg</span>
               </div>
               <div className="pr-stat">
                 <span className="stat-label">{t.maxReps || 'Max Reps'}</span>
@@ -260,126 +386,141 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
               </div>
             </div>
 
+            {personalBest && (
+              <div style={{
+                marginTop: '2rem',
+                padding: '2rem',
+                border: '3px solid #d4af37',
+                borderRadius: '0.75rem',
+                backgroundColor: 'rgba(212, 175, 55, 0.08)',
+                textAlign: 'center',
+                boxShadow: '0 0 20px rgba(212, 175, 55, 0.2)'
+              }}>
+                <div style={{ fontSize: '0.9rem', color: '#d4af37', fontWeight: '600', marginBottom: '1rem', letterSpacing: '0.05em' }}>
+                  PERSONAL BEST
+                </div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#fff', marginBottom: '0.5rem', letterSpacing: '0.02em' }}>
+                  {personalBest.weight} kg × {personalBest.reps}
+                </div>
+                <div style={{ fontSize: '0.95rem', color: '#aaa', marginBottom: '1rem' }}>
+                  Est. 1RM: {personalBest.estimated1RM.toFixed(1)} kg
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#888' }}>
+                  {formatFullDate(personalBest.date)}
+                </div>
+              </div>
+            )}
+
             {records?.length > 1 && (
               <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', color: '#888' }}>{t.weightHistory || 'Weight History'}</h3>
+                <h3 style={{ marginBottom: '1rem', color: '#888' }}>Strength Progress (Estimated 1RM)</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={graphData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                     <XAxis 
                       dataKey="date"
-                      tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
+                      tickFormatter={formatDate}
                       stroke="#888"
                       tick={{ fontSize: 10 }}
                     />
                     <YAxis 
                       stroke="#888"
-                      domain={['dataMin - 1', 'dataMax + 1']}
+                      domain={[Math.floor(min1RM * 0.9), Math.ceil(max1RM * 1.05)]}
                       tick={{ fontSize: 10 }}
-                      label={{ value: 'lbs', angle: -90, position: 'insideLeft', offset: 10 }}
+                      label={{ value: 'kg', angle: -90, position: 'insideLeft', offset: 10 }}
                     />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #666', borderRadius: '4px' }}
                       labelStyle={{ color: '#fff' }}
-                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
-                      formatter={(value) => [value, 'Weight (lbs)']}
+                      labelFormatter={(label) => formatFullDate(label)}
+                      formatter={(value, name, props) => {
+                        const estimated1RM = props.payload.estimated1RM;
+                        const weight = props.payload.weight;
+                        const reps = props.payload.reps;
+                        return [
+                          <div key="tooltip" style={{ color: '#fff' }}>
+                            <div>Estimated 1RM: {estimated1RM.toFixed(1)} kg</div>
+                            <div style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '0.25rem' }}>
+                              Based on: {weight} kg x {reps} reps
+                            </div>
+                          </div>,
+                          ''
+                        ];
+                      }}
                     />
                     <Legend />
                     <Line
                       type="monotone"
-                      dataKey="weight"
-                      stroke="#3b82f6"
-                      dot={{ fill: '#3b82f6', r: 5 }}
-                      activeDot={{ r: 7 }}
-                      name="Weight (lbs)"
+                      dataKey="estimated1RM"
+                      stroke="#3A29FF"
                       strokeWidth={3}
+                      dot={{ fill: '#3A29FF', r: 5 }}
+                      activeDot={{ r: 7 }}
+                      name="Estimated 1RM (kg)"
+                      isAnimationActive={true}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             )}
 
-            {records?.length > 1 && (
-              <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ marginBottom: '1rem', color: '#888' }}>{t.repsHistory || 'Reps History'}</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={graphData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis 
-                      dataKey="date"
-                      tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}
-                      stroke="#888"
-                      tick={{ fontSize: 10 }}
-                    />
-                    <YAxis 
-                      stroke="#888"
-                      domain={['dataMin - 1', 'dataMax + 1']}
-                      tick={{ fontSize: 10 }}
-                      label={{ value: t.reps || 'Reps', angle: -90, position: 'insideLeft', offset: 10 }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #666', borderRadius: '4px' }}
-                      labelStyle={{ color: '#fff' }}
-                      labelFormatter={(label) => new Date(label).toLocaleDateString()}
-                      formatter={(value) => [value, 'Reps']}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="reps"
-                      stroke="#10b981"
-                      dot={{ fill: '#10b981', r: 5 }}
-                      activeDot={{ r: 7 }}
-                      name="Reps"
-                      strokeWidth={3}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+            {records?.length === 1 && (
+              <div style={{ marginTop: '2rem', padding: '2rem', backgroundColor: '#222', borderRadius: '0.5rem', textAlign: 'center' }}>
+                <p style={{ color: '#888' }}>
+                  {t.addNewPR || 'Add another record to see progress'}
+                </p>
               </div>
             )}
 
             <div style={{ marginTop: '2rem' }}>
               <h3 style={{ marginBottom: '1rem', color: '#888' }}>{t.allRecords || 'All Records'}</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto' }}>
-                {records?.map((pr) => (
-                  <div
-                    key={pr?.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '0.75rem',
-                      backgroundColor: '#222',
-                      borderRadius: '0.5rem',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    <div>
-                      <div>
-                        {pr?.weight > 0 ? `${pr?.weight} lbs` : ''} 
-                        {pr?.weight > 0 && pr?.reps > 0 ? ' • ' : ''}
-                        {pr?.reps > 0 ? `${pr?.reps} reps` : ''}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: '#888' }}>
-                        {new Date(pr?.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setDeleteModal({ isOpen: true, prId: pr?.id })}
+                {records?.map((pr) => {
+                  const safeWeight = Number(pr?.weight) || 0;
+                  const safeReps = Number(pr?.reps) || 0;
+                  const dateStr = pr?.created_at || pr?.date || new Date().toISOString();
+                  const formattedDate = formatFullDate(dateStr);
+                  
+                  return (
+                    <div
+                      key={pr?.id}
                       style={{
-                        padding: '0.5rem 0.75rem',
-                        backgroundColor: '#d32f2f',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '0.35rem',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem'
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.75rem',
+                        backgroundColor: '#222',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.9rem'
                       }}
                     >
-                      {t.delete || 'Delete'}
-                    </button>
-                  </div>
-                ))}
+                      <div>
+                        <div>
+                          {safeWeight > 0 ? `${safeWeight} kg` : ''} 
+                          {safeWeight > 0 && safeReps > 0 ? ' • ' : ''}
+                          {safeReps > 0 ? `${safeReps} ${language === 'pl' ? 'pow.' : 'reps'}` : ''}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#888' }}>
+                          {formattedDate}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setDeleteModal({ isOpen: true, prId: pr?.id })}
+                        style={{
+                          padding: '0.5rem 0.75rem',
+                          backgroundColor: '#d32f2f',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '0.35rem',
+                          cursor: 'pointer',
+                          fontSize: '0.8rem'
+                        }}
+                      >
+                        {t.delete || 'Delete'}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

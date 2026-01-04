@@ -30,17 +30,17 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
   return (
     <div className="ui-center">
       <div className="home-content">
-        <h1 className="app-title">{t.appTitle}</h1>
+        <h1 className="app-title">Trackd</h1>
         
         {totalCompletedWorkouts > 0 && (
           <div className="home-stats-banner">
             <div className="stat-item">
               <span className="stat-number">{totalCompletedWorkouts}</span>
-              <span className="stat-label">{t.workoutsCompleted || 'Workouts'}</span>
+              <span className="stat-label">{t.workoutsCompleted}</span>
             </div>
             <div className="stat-item">
               <span className="stat-number">{savedWorkouts.length}</span>
-              <span className="stat-label">{t.workoutTemplates || 'Templates'}</span>
+              <span className="stat-label">{t.workoutTemplates}</span>
             </div>
           </div>
         )}
@@ -65,7 +65,7 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
                         <div className="workout-card-title">
                           <h3>{workout.name}</h3>
                           {completionCount > 0 && (
-                            <span className="completion-badge">{completionCount} times</span>
+                            <span className="completion-badge">{completionCount} {language === 'pl' ? 'razy' : 'times'}</span>
                           )}
                         </div>
                         <div className="workout-card-actions">
@@ -88,7 +88,7 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
                         {workout.exercises.map((ex, i) => (
                           <div key={i} className="exercise-brief">
                             <span className="exercise-name">{ex.name}</span>
-                            <span className="exercise-specs">{ex.sets}x{ex.reps} @ {ex.weight}lbs</span>
+                            <span className="exercise-specs">{ex.sets}x{ex.reps} @ {ex.weight}kg</span>
                           </div>
                         ))}
                       </div>
@@ -108,16 +108,16 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
       </div>
       <ConfirmModal
         isOpen={deleteModal.isOpen}
-        title={t.deleteWorkout || 'Delete Workout'}
-        message={`${t.areYouSure || 'Are you sure you want to delete'} "${deleteModal.workoutName}"? ${t.thisActionCannotBeUndone || 'This action cannot be undone.'}`}
+        title={t.deleteWorkout}
+        message={`${t.areYouSure} "${deleteModal.workoutName}"? ${t.thisActionCannotBeUndone}`}
         onConfirm={() => {
           onRemoveWorkout(deleteModal.workoutId);
           setDeleteModal({ isOpen: false, workoutId: null, workoutName: '' });
-          success(t.workoutDeleted || 'Workout deleted successfully');
+          success(t.workoutDeleted);
         }}
         onCancel={() => setDeleteModal({ isOpen: false, workoutId: null, workoutName: '' })}
-        confirmText={t.delete || 'Delete'}
-        cancelText={t.cancel || 'Cancel'}
+        confirmText={t.delete}
+        cancelText={t.cancel}
         isDangerous={true}
       />
     </div>

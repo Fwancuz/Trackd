@@ -174,7 +174,8 @@ const App = () => {
         user_id: user.id,
         exercise: exercise,
         weight: parseFloat(weight) || 0,
-        reps: parseFloat(reps) || 0,
+        reps: parseInt(reps) || 0,
+        created_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase

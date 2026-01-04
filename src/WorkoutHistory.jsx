@@ -64,7 +64,7 @@ const WorkoutHistory = ({ completedSessions, language = 'en' }) => {
                   <li key={idx} className="exercise-line">
                     <span className="ex-name">{ex.exercise || ex.name}</span>
                     <span className="ex-stats">
-                      {ex.reps} reps @ {ex.weight} lbs
+                      {ex.reps} reps @ {ex.weight} kg
                     </span>
                   </li>
                 ))}
@@ -135,7 +135,7 @@ const WorkoutHistory = ({ completedSessions, language = 'en' }) => {
                         strokeWidth={3}
                         dot={{ fill: '#ff6400', r: 5 }}
                         activeDot={{ r: 7 }}
-                        name="Weight (lbs)"
+                        name="Weight (kg)"
                       />
                     </LineChart>
                   </ResponsiveContainer>

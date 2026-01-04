@@ -202,7 +202,7 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
                 </div>
                 <div className="spec-chip">
                   <span>{currentExercise?.targetWeight}</span>
-                  <small>lbs</small>
+                  <small>kg</small>
                 </div>
               </div>
             </div>
