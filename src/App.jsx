@@ -5,6 +5,7 @@ import Home from './Home';
 import CreateWorkout from './CreateWorkout';
 import AppSettings from './AppSettings';
 import PR from './PR';
+import Verified from './Verified';
 import { ToastProvider } from './ToastContext';
 import { useAuth } from './AuthProvider';
 import { supabase } from './supabaseClient';
@@ -13,6 +14,7 @@ const App = () => {
   const { user, logout } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
+  const [isVerified, setIsVerified] = useState(false);
   const [workouts, setWorkouts] = useState([]);
   const [savedWorkoutTemplates, setSavedWorkoutTemplates] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
@@ -20,6 +22,14 @@ const App = () => {
   const [language, setLanguage] = useState('en');
   const [settings, setSettings] = useState({ language: 'en' });
   const [loading, setLoading] = useState(true);
+
+  // Check for verified parameter in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verified') === 'true') {
+      setIsVerified(true);
+    }
+  }, []);
 
   // Load all user data from Supabase on mount
   useEffect(() => {
@@ -221,6 +231,11 @@ const App = () => {
         </div>
       </div>
     );
+  }
+
+  // Show verified page if verified parameter is present
+  if (isVerified) {
+    return <Verified />;
   }
 
   return (
