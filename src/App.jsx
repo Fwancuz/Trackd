@@ -6,6 +6,7 @@ import CreateWorkout from './CreateWorkout';
 import AppSettings from './AppSettings';
 import PR from './PR';
 import Verified from './Verified';
+import ResetPassword from './ResetPassword';
 import { ToastProvider } from './ToastContext';
 import { useAuth } from './AuthProvider';
 import { supabase } from './supabaseClient';
@@ -15,6 +16,7 @@ const App = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
   const [isVerified, setIsVerified] = useState(false);
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const [workouts, setWorkouts] = useState([]);
   const [savedWorkoutTemplates, setSavedWorkoutTemplates] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
@@ -23,11 +25,17 @@ const App = () => {
   const [settings, setSettings] = useState({ language: 'en' });
   const [loading, setLoading] = useState(true);
 
-  // Check for verified parameter in URL
+  // Check for verified parameter and reset-password route in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const pathname = window.location.pathname;
+    
     if (params.get('verified') === 'true') {
       setIsVerified(true);
+    }
+    
+    if (pathname === '/reset-password') {
+      setIsResetPassword(true);
     }
   }, []);
 
@@ -35,6 +43,10 @@ const App = () => {
   useEffect(() => {
     if (user) {
       loadUserData();
+    } else {
+      // If no user, stop loading immediately
+      // (important for reset password flow where user is not authenticated)
+      setLoading(false);
     }
   }, [user]);
 
@@ -231,6 +243,11 @@ const App = () => {
         </div>
       </div>
     );
+  }
+
+  // Show reset password page if on /reset-password route (before checking user)
+  if (isResetPassword) {
+    return <ResetPassword />;
   }
 
   // Show verified page if verified parameter is present
