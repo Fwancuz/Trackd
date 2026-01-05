@@ -79,7 +79,7 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
           }, 0);
           setLastCompletedVolume(sessionVolume);
           setShowCompletionMessage(true);
-          setTimeout(() => setShowCompletionMessage(false), 5000);
+          setTimeout(() => setShowCompletionMessage(false), 4000);
           onWorkoutComplete(activeWorkout.id, exerciseData, duration);
           setActiveWorkout(null);
         }}
@@ -95,17 +95,8 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
   return (
     <div className="ui-center">
       <div className="home-content">
-        {/* Completion Message */}
-        {showCompletionMessage && lastCompletedVolume !== null && (
-          <div className="completion-message">
-            <span className="completion-emoji">🎉</span>
-            <p>
-              {language === 'pl'
-                ? `Brawo! Twoje ${lastCompletedVolume.toFixed(0)} kg właśnie zasiliło statystyki!`
-                : `Great job! Your ${lastCompletedVolume.toFixed(0)} kg just boosted your stats!`}
-            </p>
-          </div>
-        )}
+        {/* Completion Message - Hidden (Ultra-minimalist) */}
+        {/* Message is now displayed directly in Boss Bar instead of Toast */}
 
         {/* Boss Bar - Progress to Next Rank */}
         <div className="boss-bar-container">
@@ -116,9 +107,19 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
                 <span className="rank-name">{currentRank.name[language]}</span>
               </div>
               {nextRank && (
-                <div className="next-rank-info">
-                  <span className="next-label">{language === 'pl' ? 'Następna Ranga' : 'Next Rank'}:</span>
-                  <span className="next-rank-name">{nextRank.name[language]} ({rankProgress.toFixed(0)}%)</span>
+                <div className={`next-rank-info ${showCompletionMessage ? 'show-success' : ''}`}>
+                  {showCompletionMessage && lastCompletedVolume !== null ? (
+                    <span className="success-message">
+                      {language === 'pl'
+                        ? `Brawo! Twoje ${lastCompletedVolume.toFixed(0)} kg zasiliło statystyki!`
+                        : `Great job! Your ${lastCompletedVolume.toFixed(0)} kg boosted stats!`}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="next-label">{language === 'pl' ? 'Następna Ranga' : 'Next Rank'}:</span>
+                      <span className="next-rank-name">{nextRank.name[language]} ({rankProgress.toFixed(0)}%)</span>
+                    </>
+                  )}
                 </div>
               )}
             </div>

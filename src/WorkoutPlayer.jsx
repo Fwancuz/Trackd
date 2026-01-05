@@ -142,7 +142,7 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
                 <span className="stat-value">{formatTime(workoutDuration)}</span>
               </div>
               <div className="stat-badge">
-                <span className="stat-label">{t.progress || 'Progress'}</span>
+                <span className="stat-label">{t.sets || 'Sets'}</span>
                 <span className="stat-value">{totalCompletedSets}/{totalSets}</span>
               </div>
             </div>

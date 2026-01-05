@@ -94,9 +94,13 @@ const AppSettings = ({ settings, updateSettings, logout, onResetStats, onFetchSe
             </button>
 
             {/* Reset Statistics Button */}
-            <button
-              onClick={() => setShowResetStatsConfirm(true)}
-              disabled={isResettingStats}
+            <div className="danger-zone">
+              <h3 style={{ color: '#ff6b6b', marginBottom: '0.75rem', fontSize: '0.95rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {language === 'pl' ? '⚠️ Strefa Niebezpieczna' : '⚠️ Danger Zone'}
+              </h3>
+              <button
+                onClick={() => setShowResetStatsConfirm(true)}
+                disabled={isResettingStats}
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
@@ -126,6 +130,7 @@ const AppSettings = ({ settings, updateSettings, logout, onResetStats, onFetchSe
             >
               {isResettingStats ? 'Resetting...' : t.resetStats}
             </button>
+            </div>
           </div>
         </div>
       </div>
