@@ -11,6 +11,9 @@ import { ToastProvider, useToast } from './ToastContext';
 import { useAuth } from './AuthProvider';
 import { supabase } from './supabaseClient';
 
+// Session Recovery Storage Key
+const STORAGE_KEY = 'trackd_active_session';
+
 const App = () => {
   const { user, logout } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
@@ -24,6 +27,8 @@ const App = () => {
   const [language, setLanguage] = useState('en');
   const [settings, setSettings] = useState({ language: 'en' });
   const [loading, setLoading] = useState(true);
+  const [recoveredSession, setRecoveredSession] = useState(null);
+  const [editingTemplate, setEditingTemplate] = useState(null);
 
   // Check for verified parameter and reset-password route in URL
   useEffect(() => {
@@ -36,6 +41,22 @@ const App = () => {
     
     if (pathname === '/reset-password') {
       setIsResetPassword(true);
+    }
+  }, []);
+
+  // Check for recovered session in localStorage on mount
+  useEffect(() => {
+    try {
+      const savedSession = localStorage.getItem(STORAGE_KEY);
+      if (savedSession) {
+        const sessionData = JSON.parse(savedSession);
+        setRecoveredSession(sessionData);
+        // Auto-navigate to home where WorkoutPlayer will be rendered with recovered data
+        setCurrentPage('home');
+      }
+    } catch (error) {
+      console.error('Error recovering session from localStorage:', error);
+      localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
@@ -173,13 +194,15 @@ const App = () => {
     }
   };
 
-  const completeWorkoutSession = async (workoutId, exerciseData, duration = 0) => {
+  const completeWorkoutSession = async (workoutId, exerciseData, duration = 0, workoutName = null, totalVolume = 0) => {
     try {
+      // Only save columns that exist in the database
       const sessionToSave = {
         user_id: user.id,
         workout_id: workoutId,
-        exercises: exerciseData,
+        exercises: exerciseData, // Contains {name: '...', data: [...]}
         duration: duration,
+        completed_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
@@ -189,11 +212,10 @@ const App = () => {
 
       if (error) throw error;
       
-      // Update local state first for immediate UI feedback
+      // Update local state for immediate UI feedback
       setCompletedSessions([data[0], ...completedSessions]);
       
-      // Fetch latest sessions immediately to ensure Stats gets fresh and accurate data
-      // This triggers Stats to recalculate volume with the new workout and show success message
+      // Fetch latest sessions to sync UI
       await fetchCompletedSessions();
       
     } catch (error) {
@@ -315,11 +337,14 @@ const App = () => {
         console.error('Error refreshing stats data on tab change:', error);
       });
     }
-  }, [currentPage, user, fetchCompletedSessions]);
+  }, [currentPage, user]);
+
+  // Note: fetchCompletedSessions is intentionally not included in dependency array
+  // to avoid infinite loops. It's a stable function defined in component scope.
 
   const pages = {
-    home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} />,
-    create: <CreateWorkout addWorkout={addWorkout} language={language} />,
+    home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} recoveredSession={recoveredSession} userId={user?.id} onRefreshCompletedSessions={fetchCompletedSessions} onEditTemplate={setEditingTemplate} onNavigateToCreate={() => setCurrentPage('create')} />,
+    create: <CreateWorkout addWorkout={addWorkout} language={language} editingTemplate={editingTemplate} onEditComplete={() => setEditingTemplate(null)} />,
     records: <PR personalRecords={personalRecords} onAddPR={addPersonalRecord} onDeletePR={deletePersonalRecord} language={language} />,
     settings: <AppSettings settings={settings} updateSettings={updateSettings} logout={logout} onResetStats={handleResetStats} onFetchSessions={fetchCompletedSessions} language={language} />,
   };

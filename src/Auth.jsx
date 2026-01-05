@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from './supabaseClient';
 import Aurora from './Aurora';
+import appLogo from './assets/logonewtransparent.png';
 
 const Auth = ({ onAuthStateChange }) => {
   const [email, setEmail] = useState('');
@@ -71,9 +72,9 @@ const Auth = ({ onAuthStateChange }) => {
       </div>
       <div className="ui-center">
         <div className="w-full max-w-sm p-8 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20">
-          <h1 className="text-3xl font-bold text-white mb-8 text-center">
-            Trackd
-          </h1>
+          <div className="flex justify-center mb-8">
+            <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+          </div>
 
           {isResetPassword ? (
             // Reset Password Form

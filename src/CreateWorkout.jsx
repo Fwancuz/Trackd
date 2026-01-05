@@ -1,14 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import ExerciseSelect from './ExerciseSelect';
 import translations from './translations';
 import EXERCISE_LIST from './exerciseList';
 import { useToast } from './ToastContext';
+import { supabase } from './supabaseClient';
+import appLogo from './assets/logonewtransparent.png';
 
-const CreateWorkout = ({ addWorkout, language = 'en' }) => {
+const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, onEditComplete = null }) => {
   const [workoutName, setWorkoutName] = useState('');
   const [exercises, setExercises] = useState([{ name: '', sets: '', reps: '', weight: '' }]);
+  const [isEditing, setIsEditing] = useState(false);
   const { success } = useToast();
   const t = translations[language];
+
+  // Pre-populate form when editing a template
+  useEffect(() => {
+    if (editingTemplate) {
+      setIsEditing(true);
+      setWorkoutName(editingTemplate.name);
+      if (editingTemplate.exercises && editingTemplate.exercises.length > 0) {
+        setExercises(editingTemplate.exercises);
+      } else {
+        setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
+      }
+    } else {
+      setIsEditing(false);
+      setWorkoutName('');
+      setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
+    }
+  }, [editingTemplate]);
 
   const addExercise = () => {
     setExercises([...exercises, { name: '', sets: '', reps: '', weight: '' }]);
@@ -26,27 +47,59 @@ const CreateWorkout = ({ addWorkout, language = 'en' }) => {
     setExercises(newExercises);
   };
 
-  const saveWorkout = () => {
+  const saveWorkout = async () => {
     if (workoutName && exercises.some(e => e.name)) {
-      const workout = {
-        id: Date.now(),
-        name: workoutName,
-        date: new Date().toISOString(),
-        exercises: exercises.filter(e => e.name)
-      };
-      addWorkout(workout);
-      setWorkoutName('');
-      setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
-      
-      // Show toast notification
-      success(t.workoutSaved);
+      if (isEditing && editingTemplate) {
+        // Update existing template
+        try {
+          const { error } = await supabase
+            .from('workout_templates')
+            .update({
+              name: workoutName,
+              exercises: exercises.filter(e => e.name)
+            })
+            .eq('id', editingTemplate.id);
+
+          if (error) throw error;
+
+          success(language === 'pl' ? 'Plan zaktualizowany!' : 'Template updated!');
+          
+          // Reset form
+          setWorkoutName('');
+          setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
+          setIsEditing(false);
+          
+          // Call completion callback
+          if (onEditComplete) {
+            onEditComplete();
+          }
+        } catch (error) {
+          console.error('Error updating template:', error);
+        }
+      } else {
+        // Create new template
+        const workout = {
+          id: Date.now(),
+          name: workoutName,
+          date: new Date().toISOString(),
+          exercises: exercises.filter(e => e.name)
+        };
+        addWorkout(workout);
+        setWorkoutName('');
+        setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
+        
+        // Show toast notification
+        success(t.workoutSaved);
+      }
     }
   };
 
   return (
     <div className="ui-center">
       <div className="create-workout">
-        <h1 className="app-title">Trackd</h1>
+        <div className="flex justify-center mb-6">
+          <img src={appLogo} alt="Trackd" className="h-10 w-auto object-contain" />
+        </div>
         <input
           type="text"
           placeholder={t.workoutName}
@@ -65,7 +118,7 @@ const CreateWorkout = ({ addWorkout, language = 'en' }) => {
                     onClick={() => removeExercise(index)}
                     className="remove-exercise-btn"
                   >
-                    ✕
+                    <X size={18} strokeWidth={2} />
                   </button>
                 )}
               </div>
@@ -100,7 +153,9 @@ const CreateWorkout = ({ addWorkout, language = 'en' }) => {
           ))}
         </div>
         <button onClick={addExercise} className="btn">{t.addExercise}</button>
-        <button onClick={saveWorkout} className="btn">{t.saveWorkout}</button>
+        <button onClick={saveWorkout} className="btn">
+          {isEditing ? (language === 'pl' ? 'Aktualizuj Plan' : 'Update Template') : t.saveWorkout}
+        </button>
       </div>
     </div>
   );

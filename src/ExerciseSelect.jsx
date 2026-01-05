@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 
 // Fuzzy search function - allows typos and partial matches
+// Optimized for large lists of exercise objects
 const fuzzySearch = (searchTerm, options) => {
   if (!searchTerm) return options;
 
@@ -8,7 +9,9 @@ const fuzzySearch = (searchTerm, options) => {
   
   return options
     .map(option => {
-      const optionLower = option.toLowerCase();
+      // Handle both string and object formats
+      const exerciseName = typeof option === 'string' ? option : option.name;
+      const optionLower = exerciseName.toLowerCase();
       
       // Exact match
       if (optionLower === search) return { option, score: 1000 };
@@ -46,7 +49,10 @@ const ExerciseSelect = ({ value, onChange, options, placeholder = "Select Exerci
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
 
-  const filteredOptions = fuzzySearch(searchTerm, options);
+  // Memoize filtered options to prevent unnecessary recalculations
+  const filteredOptions = useMemo(() => {
+    return fuzzySearch(searchTerm, options);
+  }, [searchTerm, options]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -60,9 +66,20 @@ const ExerciseSelect = ({ value, onChange, options, placeholder = "Select Exerci
   }, []);
 
   const handleSelect = (option) => {
-    onChange(option);
+    // Handle both string and object formats
+    const selectedValue = typeof option === 'string' ? option : option.name;
+    onChange(selectedValue);
     setIsOpen(false);
     setSearchTerm('');
+  };
+
+  // Extract exercise names for comparison
+  const getExerciseName = (exercise) => {
+    return typeof exercise === 'string' ? exercise : exercise.name;
+  };
+  
+  const getExerciseId = (exercise) => {
+    return typeof exercise === 'string' ? exercise : exercise.id;
   };
 
   return (
@@ -90,18 +107,23 @@ const ExerciseSelect = ({ value, onChange, options, placeholder = "Select Exerci
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onClick={(e) => e.stopPropagation()}
+            autoFocus
           />
           <div className="exercise-options">
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <div
-                  key={option}
-                  className={`exercise-option ${value === option ? 'selected' : ''}`}
-                  onClick={() => handleSelect(option)}
-                >
-                  {option}
-                </div>
-              ))
+              filteredOptions.map((option) => {
+                const exerciseName = getExerciseName(option);
+                const exerciseId = getExerciseId(option);
+                return (
+                  <div
+                    key={exerciseId}
+                    className={`exercise-option ${value === exerciseName ? 'selected' : ''}`}
+                    onClick={() => handleSelect(option)}
+                  >
+                    {exerciseName}
+                  </div>
+                );
+              })
             ) : (
               <div className="exercise-option disabled">No exercises found</div>
             )}

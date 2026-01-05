@@ -5,6 +5,7 @@ import translations from './translations';
 import EXERCISE_LIST from './exerciseList';
 import ConfirmModal from './ConfirmModal';
 import { useToast } from './ToastContext';
+import appLogo from './assets/logonewtransparent.png';
 
 const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
   const t = translations[language];
@@ -69,7 +70,9 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
       return (
         <div className="ui-center">
           <div className="progress-content">
-            <h1 className="app-title">Trackd</h1>
+            <div className="flex justify-center mb-6">
+              <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+            </div>
             <p>{t.noPRsYet}</p>
             <button 
               className="metric-btn large"
@@ -112,8 +115,10 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
     return (
       <div className="ui-center">
         <div className="progress-content" style={{ padding: '0 16px' }}>
+          <div className="flex justify-center mb-6">
+            <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <h1 className="app-title">Trackd</h1>
             <div style={{ width: '100%', maxWidth: '300px' }}>
               <ExerciseSelect
                 value={selectedExercise || ''}
@@ -176,29 +181,19 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
       <div className="ui-center">
         <div className="progress-content">
           <button className="back-btn" onClick={() => setView('list')}>← {t.back}</button>
-          <h1 className="app-title">Trackd</h1>
+          <div className="flex justify-center mb-6">
+            <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+          </div>
           
           <form onSubmit={handleAddPR} style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label style={{ color: '#aaa', fontSize: '0.9rem' }}>{t.selectExercise}</label>
-              <select
+              <ExerciseSelect
                 value={formData.exercise}
-                onChange={(e) => setFormData({ ...formData, exercise: e.target.value })}
-                style={{
-                  padding: '0.75rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #444',
-                  backgroundColor: '#1a1a1a',
-                  color: '#fff',
-                  fontSize: '1rem'
-                }}
-                required
-              >
-                <option value="">{t.selectExercise}</option>
-                {EXERCISE_LIST.map((exercise) => (
-                  <option key={exercise} value={exercise}>{exercise}</option>
-                ))}
-              </select>
+                onChange={(exercise) => setFormData({ ...formData, exercise })}
+                options={EXERCISE_LIST}
+                placeholder={t.selectExercise}
+              />
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -288,7 +283,9 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
         <div className="ui-center">
           <div className="progress-content">
             <button className="back-btn" onClick={() => setView('list')}>← {t.back}</button>
-            <h1 className="app-title">Trackd</h1>
+            <div className="flex justify-center mb-6">
+              <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+            </div>
             <p style={{ marginTop: '1rem', color: '#888' }}>
               {t.noPRsYet}
             </p>
@@ -361,7 +358,9 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
           <div className="progress-content" style={{ padding: '0 16px' }}>
             <div className="graph-header">
             <button className="back-btn" onClick={() => setView('list')}>← {t.back}</button>
-            <h1 className="app-title">Trackd</h1>
+            <div className="flex justify-center mb-6">
+              <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+            </div>
           </div>
 
           <div className="exercise-graph-card full-width">
@@ -465,8 +464,8 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
             )}
 
             <div style={{ marginTop: '2rem' }}>
-              <h3 style={{ marginBottom: '1rem', color: '#888' }}>{t.allRecords || 'All Records'}</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto' }}>
+              <h3 className="pr-records-title">{t.allRecords || 'All Records'}</h3>
+              <div className="pr-records-container">
                 {records?.map((pr) => {
                   const safeWeight = Number(pr?.weight) || 0;
                   const safeReps = Number(pr?.reps) || 0;
@@ -474,39 +473,20 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                   const formattedDate = formatFullDate(dateStr);
                   
                   return (
-                    <div
-                      key={pr?.id}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '0.75rem',
-                        backgroundColor: '#222',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      <div>
-                        <div>
+                    <div key={`pr-${pr?.id}`} className="pr-record-item">
+                      <div className="pr-record-info">
+                        <div className="pr-record-weight">
                           {safeWeight > 0 ? `${safeWeight} kg` : ''} 
                           {safeWeight > 0 && safeReps > 0 ? ' • ' : ''}
                           {safeReps > 0 ? `${safeReps} ${language === 'pl' ? 'pow.' : 'reps'}` : ''}
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: '#888' }}>
+                        <div className="pr-record-date">
                           {formattedDate}
                         </div>
                       </div>
                       <button
                         onClick={() => setDeleteModal({ isOpen: true, prId: pr?.id })}
-                        style={{
-                          padding: '0.5rem 0.75rem',
-                          backgroundColor: '#d32f2f',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '0.35rem',
-                          cursor: 'pointer',
-                          fontSize: '0.8rem'
-                        }}
+                        className="pr-delete-btn"
                       >
                         {t.delete || 'Delete'}
                       </button>

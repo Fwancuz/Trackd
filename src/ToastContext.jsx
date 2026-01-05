@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Check, X, Info } from 'lucide-react';
 
 const ToastContext = createContext();
 
@@ -12,42 +13,69 @@ export const useToast = () => {
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
+  const timeoutRefsMap = useRef(new Map());
+
+  const removeToast = (id) => {
+    // Clear any pending timeout for this toast
+    if (timeoutRefsMap.current.has(id)) {
+      clearTimeout(timeoutRefsMap.current.get(id));
+      timeoutRefsMap.current.delete(id);
+    }
+
+    // Use requestAnimationFrame to ensure React finishes current render cycle
+    requestAnimationFrame(() => {
+      setToasts(prev => {
+        // Double-check: only remove if toast actually exists
+        const exists = prev.some(t => t.id === id);
+        if (!exists) return prev;
+        return prev.filter(t => t.id !== id);
+      });
+    });
+  };
 
   const showToast = (message, type = 'success', duration = 3000) => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     const toast = { id, message, type };
     
     setToasts(prev => [...prev, toast]);
     
     if (duration > 0) {
-      setTimeout(() => {
-        setToasts(prev => prev.filter(t => t.id !== id));
+      // Use setTimeout with callback through requestAnimationFrame for safe removal
+      const timeoutId = setTimeout(() => {
+        removeToast(id);
       }, duration);
+      
+      // Store timeout reference for cleanup
+      timeoutRefsMap.current.set(id, timeoutId);
     }
     
     return id;
-  };
-
-  const removeToast = (id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
   };
 
   const success = (message, duration) => showToast(message, 'success', duration);
   const error = (message, duration) => showToast(message, 'error', duration);
   const info = (message, duration) => showToast(message, 'info', duration);
 
+  // Cleanup function to clear all timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutRefsMap.current.forEach(timeoutId => clearTimeout(timeoutId));
+      timeoutRefsMap.current.clear();
+    };
+  }, []);
+
   return (
     <ToastContext.Provider value={{ showToast, removeToast, success, error, info }}>
       {children}
-      <div className="toast-container">
+      <div className="toast-container" role="region" aria-live="polite" aria-atomic="true">
         {toasts.map(toast => (
-          <div key={toast.id} className={`toast-notification toast-${toast.type}`}>
+          <div key={`toast-${toast.id}`} className={`toast-notification toast-${toast.type}`}>
             <div className="toast-content">
-              <span className="toast-icon">
-                {toast.type === 'success' && '✓'}
-                {toast.type === 'error' && '✕'}
-                {toast.type === 'info' && 'ℹ'}
-              </span>
+              <div className="toast-icon">
+                {toast.type === 'success' && <Check size={18} strokeWidth={2} />}
+                {toast.type === 'error' && <X size={18} strokeWidth={2} />}
+                {toast.type === 'info' && <Info size={18} strokeWidth={2} />}
+              </div>
               <span className="toast-message">{toast.message}</span>
             </div>
           </div>

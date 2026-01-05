@@ -1,32 +1,177 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Medal, Trophy, Zap, Target, History, Clock, Play, Pencil, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import WorkoutPlayer from './WorkoutPlayer';
 import ConfirmModal from './ConfirmModal';
+import RecentHistory from './RecentHistory';
+import MoreMenu from './MoreMenu';
 import translations from './translations';
 import { useToast } from './ToastContext';
+import { useWorkoutHistory } from './useWorkoutHistory';
+import { supabase } from './supabaseClient';
+import appLogo from './assets/logonewtransparent.png';
 
-const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 'en', onRemoveWorkout }) => {
+const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 'en', onRemoveWorkout, recoveredSession = null, userId = null, onRefreshCompletedSessions = null, onEditTemplate = null, onNavigateToCreate = null }) => {
   const [activeWorkout, setActiveWorkout] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, workoutId: null, workoutName: '' });
-  const [activeTab, setActiveTab] = useState('workouts'); // 'workouts', 'templates', 'total'
+  const [activeTab, setActiveTab] = useState('plans'); // 'plans', 'history', 'total'
   const [lastCompletedVolume, setLastCompletedVolume] = useState(null);
   const [showCompletionMessage, setShowCompletionMessage] = useState(false);
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
+  const [templates, setTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const { success } = useToast();
   const t = translations[language];
+  
+  // Initialize workout history hook
+  const { deleteSession } = useWorkoutHistory(userId);
+
+  // Fetch templates from Supabase
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      if (!userId) return;
+      setLoadingTemplates(true);
+      try {
+        const { data, error } = await supabase
+          .from('workout_templates')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching templates:', error);
+        } else {
+          setTemplates(data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching templates:', err);
+      } finally {
+        setLoadingTemplates(false);
+      }
+    };
+
+    fetchTemplates();
+  }, [userId]);
+
+  // Initialize with recovered session if it exists
+  useEffect(() => {
+    if (recoveredSession) {
+      // Set a dummy workout object for recovered session
+      setActiveWorkout({
+        name: recoveredSession.workoutName,
+        exercises: [], // Exercises are already in recovered state
+      });
+    }
+  }, [recoveredSession]);
+
+
+
+  /**
+   * Handle create new template - navigate to create view
+   */
+  const handleCreateTemplate = () => {
+    if (onEditTemplate) {
+      onEditTemplate(null); // Pass null to indicate new template
+    }
+    if (onNavigateToCreate) {
+      onNavigateToCreate();
+    }
+  };
+
+  /**
+   * Handle edit template - set editing state and navigate to create view
+   */
+  const handleEditTemplate = (template) => {
+    if (onEditTemplate) {
+      onEditTemplate(template);
+    }
+    if (onNavigateToCreate) {
+      onNavigateToCreate();
+    }
+  };
+
+  /**
+   * Handle delete template - show confirmation modal
+   */
+  const handleDeleteTemplate = (templateId, templateName) => {
+    setDeleteModal({
+      isOpen: true,
+      workoutId: templateId,
+      workoutName: templateName
+    });
+  };
+
+  /**
+   * Confirm deletion of template from database
+   */
+  const handleConfirmDeleteTemplate = async () => {
+    const templateIdToDelete = deleteModal.workoutId;
+    
+    try {
+      // Remove from local state IMMEDIATELY for instant UI feedback
+      setTemplates(prev => prev.filter(t => t.id !== templateIdToDelete));
+      setDeleteModal({ isOpen: false, workoutId: null, workoutName: '' });
+      
+      // Then delete from database
+      const { error } = await supabase
+        .from('workout_templates')
+        .delete()
+        .eq('id', templateIdToDelete)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      // Show success message
+      success(language === 'pl' ? 'Plan usunięty!' : 'Template deleted!');
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      // Restore template to state if deletion failed
+      success(language === 'pl' ? 'Błąd przy usuwaniu planu' : 'Error deleting template');
+    }
+  };
+
+  /**
+   * Get menu items for template card
+   */
+  const getTemplateMenuItems = (template) => [
+    {
+      label: language === 'pl' ? 'Edytuj' : 'Edit',
+      icon: Edit2,
+      variant: 'default',
+      onClick: () => handleEditTemplate(template)
+    },
+    {
+      label: language === 'pl' ? 'Usuń' : 'Delete',
+      icon: Trash2,
+      variant: 'danger',
+      onClick: () => handleDeleteTemplate(template.id, template.name)
+    }
+  ];
 
   // Calculate total lifetime volume using useMemo
   const { totalLifetimeVolume, totalSessions } = useMemo(() => {
     let total = 0;
     completedSessions.forEach(session => {
-      if (session.exercises && Array.isArray(session.exercises)) {
-        session.exercises.forEach(exercise => {
-          if (exercise.sets && Array.isArray(exercise.sets)) {
-            exercise.sets.forEach(set => {
-              const weight = parseFloat(set.weight) || 0;
-              const reps = parseInt(set.reps) || 0;
-              total += weight * reps;
-            });
-          }
-        });
+      if (session.exercises) {
+        // Handle new structure where exercises = {name: '...', data: [...]}
+        let exercisesData = session.exercises;
+        if (session.exercises.data && Array.isArray(session.exercises.data)) {
+          exercisesData = session.exercises.data;
+        } else if (!Array.isArray(session.exercises)) {
+          return; // Skip if exercises is not in expected format
+        }
+        
+        // If it's an array, process it directly
+        if (Array.isArray(exercisesData)) {
+          exercisesData.forEach(exercise => {
+            if (exercise.sets && Array.isArray(exercise.sets)) {
+              exercise.sets.forEach(set => {
+                const weight = parseFloat(set.weight) || 0;
+                const reps = parseInt(set.reps) || 0;
+                total += weight * reps;
+              });
+            }
+          });
+        }
       }
     });
     return {
@@ -35,14 +180,34 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
     };
   }, [completedSessions]);
 
+  // Calculate chart data from completed sessions for progress visualization
+  const chartData = useMemo(() => {
+    // For now, chart data is not used - keeping calculation for future
+    return [];
+  }, [completedSessions]);
+
+  // Rank system with Lucide icons
+  const RankIcon = ({ tier }) => {
+    const iconProps = { size: 20, strokeWidth: 1.5 };
+    switch(tier) {
+      case 'bronze': return <Medal color="#cd7f32" {...iconProps} />;
+      case 'silver': return <Medal color="#c0c0c0" {...iconProps} />;
+      case 'gold': return <Medal color="#ffd700" {...iconProps} />;
+      case 'platinum': return <Trophy color="#e5e7eb" {...iconProps} />;
+      case 'diamond': return <Zap color="#7dd3fc" {...iconProps} />;
+      case 'titan': return <Zap color="#a78bfa" {...iconProps} />;
+      default: return null;
+    }
+  };
+
   // Determine current rank
   const ranks = [
-    { name: { en: 'Bronze', pl: 'Brąz' }, emoji: '🥉', min: 0, max: 1000 },
-    { name: { en: 'Silver', pl: 'Srebro' }, emoji: '🥈', min: 1000, max: 6000 },
-    { name: { en: 'Gold', pl: 'Złoto' }, emoji: '🥇', min: 6000, max: 41000 },
-    { name: { en: 'Platinum', pl: 'Platyna' }, emoji: '🏆', min: 41000, max: 100000 },
-    { name: { en: 'Diamond', pl: 'Diament' }, emoji: '💎', min: 100000, max: 204000 },
-    { name: { en: 'Titan', pl: 'Tytan' }, emoji: '🌌', min: 204000, max: Infinity },
+    { name: { en: 'Bronze', pl: 'Brąz' }, tier: 'bronze', min: 0, max: 1000 },
+    { name: { en: 'Silver', pl: 'Srebro' }, tier: 'silver', min: 1000, max: 6000 },
+    { name: { en: 'Gold', pl: 'Złoto' }, tier: 'gold', min: 6000, max: 41000 },
+    { name: { en: 'Platinum', pl: 'Platyna' }, tier: 'platinum', min: 41000, max: 100000 },
+    { name: { en: 'Diamond', pl: 'Diament' }, tier: 'diamond', min: 100000, max: 204000 },
+    { name: { en: 'Titan', pl: 'Tytan' }, tier: 'titan', min: 204000, max: Infinity },
   ];
 
   const currentRank = useMemo(() => {
@@ -67,24 +232,18 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
     return (
       <WorkoutPlayer
         workout={activeWorkout}
-        onComplete={(exerciseData, duration) => {
-          // Calculate volume from this session
-          const sessionVolume = exerciseData.reduce((sum, exercise) => {
-            if (exercise.sets && Array.isArray(exercise.sets)) {
-              return sum + exercise.sets.reduce((exSum, set) => {
-                return exSum + ((parseFloat(set.weight) || 0) * (parseInt(set.reps) || 0));
-              }, 0);
-            }
-            return sum;
-          }, 0);
+        onComplete={(exerciseData, duration, workoutName, totalVolume) => {
+          // Use the passed volume instead of calculating it
+          const sessionVolume = totalVolume || 0;
           setLastCompletedVolume(sessionVolume);
           setShowCompletionMessage(true);
           setTimeout(() => setShowCompletionMessage(false), 4000);
-          onWorkoutComplete(activeWorkout.id, exerciseData, duration);
+          onWorkoutComplete(activeWorkout.id, exerciseData, duration, workoutName, totalVolume);
           setActiveWorkout(null);
         }}
         onCancel={() => setActiveWorkout(null)}
         language={language}
+        recoveredSession={recoveredSession}
       />
     );
   }
@@ -95,6 +254,11 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
   return (
     <div className="ui-center">
       <div className="home-content">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+        </div>
+
         {/* Completion Message - Hidden (Ultra-minimalist) */}
         {/* Message is now displayed directly in Boss Bar instead of Toast */}
 
@@ -103,17 +267,19 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
           <div className="boss-bar-content">
             <div className="boss-bar-header">
               <div className="current-rank-display">
-                <span className="rank-emoji">{currentRank.emoji}</span>
+                <RankIcon tier={currentRank.tier} />
                 <span className="rank-name">{currentRank.name[language]}</span>
               </div>
               {nextRank && (
                 <div className={`next-rank-info ${showCompletionMessage ? 'show-success' : ''}`}>
                   {showCompletionMessage && lastCompletedVolume !== null ? (
-                    <span className="success-message">
-                      {language === 'pl'
-                        ? `Brawo! Twoje ${lastCompletedVolume.toFixed(0)} kg zasiliło statystyki!`
-                        : `Great job! Your ${lastCompletedVolume.toFixed(0)} kg boosted stats!`}
-                    </span>
+                    <div className="success-message-container">
+                      <span className="success-message">
+                        {language === 'pl'
+                          ? `Brawo! Twoje ${lastCompletedVolume.toFixed(0)} kg właśnie zasiliło statystyki!`
+                          : `Great job! Your ${lastCompletedVolume.toFixed(0)} kg boosted stats!`}
+                      </span>
+                    </div>
                   ) : (
                     <>
                       <span className="next-label">{language === 'pl' ? 'Następna Ranga' : 'Next Rank'}:</span>
@@ -139,37 +305,35 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
             </div>
           </div>
         </div>
-
-        <h1 className="app-title">Trackd</h1>
         
         {/* Tab Navigation */}
         <div className="stats-tabs">
           <button
-            className={`tab-button ${activeTab === 'workouts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('workouts')}
+            className={`tab-button ${activeTab === 'plans' ? 'active' : ''}`}
+            onClick={() => setActiveTab('plans')}
           >
-            <span className="tab-emoji">💪</span>
-            <span className="tab-label">{t.yourWorkouts}</span>
+            <Target size={20} strokeWidth={1.5} />
+            <span className="tab-label">{t.yourPlans}</span>
           </button>
           <button
-            className={`tab-button ${activeTab === 'templates' ? 'active' : ''}`}
-            onClick={() => setActiveTab('templates')}
+            className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
           >
-            <span className="tab-emoji">📋</span>
-            <span className="tab-label">{t.workoutTemplates}</span>
+            <Clock size={20} strokeWidth={1.5} />
+            <span className="tab-label">{language === 'pl' ? 'Historia' : 'History'}</span>
           </button>
           <button
             className={`tab-button ${activeTab === 'total' ? 'active' : ''}`}
             onClick={() => setActiveTab('total')}
           >
-            <span className="tab-emoji">🏋️</span>
+            <Zap size={20} strokeWidth={1.5} />
             <span className="tab-label">{language === 'pl' ? 'Razem Podniesione' : 'Total Lifted'}</span>
           </button>
         </div>
 
         {activeTab === 'total' && (
           <div className="total-lifted-section">
-            <div className="total-lifted-card">
+            <div className="total-lifted-card" key={statsRefreshKey}>
               <div className="total-lifted-value">
                 {(totalLifetimeVolume / 1000).toFixed(2)}
               </div>
@@ -200,133 +364,75 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
           </div>
         )}
 
-        {(activeTab === 'workouts' || activeTab !== 'total') && (
+        {(activeTab === 'plans' || activeTab !== 'total') && (
           <div className="workout-selection">
-            {savedWorkouts.length === 0 ? (
-              <div className="empty-state">
-                <h2 className="section-title">{t.noWorkouts}</h2>
-                <p>{t.startMessage}</p>
-              </div>
-            ) : (
-              <div>
-                {activeTab === 'workouts' && (
-                  <>
-                    <h2 className="section-title">{t.yourWorkouts}</h2>
-                    <div className="saved-workouts">
-                      {savedWorkouts.map((workout) => {
-                        const completionCount = completedSessions.filter(s => s.workoutId === workout.id).length;
-                        
+            {activeTab === 'plans' && (
+              <div className="plans-content">
+                <h2 className="section-title">{t.yourPlans}</h2>
+                <section className="templates-grid-container">
+                  {templates.length === 0 ? (
+                    <div className="empty-templates-state">
+                      <div className="empty-templates-content">
+                        <p className="empty-templates-message">{t.startByCreatingTemplate}</p>
+                        <button 
+                          className="btn primary create-template-btn"
+                          onClick={handleCreateTemplate}
+                        >
+                          + {t.createNewTemplate}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="templates-grid">
+                      {templates.map((template) => {
+                        const exerciseCount = template.exercises ? template.exercises.length : 0;
                         return (
-                          <div key={workout.id} className="workout-card">
-                            <div className="workout-card-header">
-                              <div className="workout-card-title">
-                                <h3>{workout.name}</h3>
-                                {completionCount > 0 && (
-                                  <span className="completion-badge">{completionCount} {language === 'pl' ? 'razy' : 'times'}</span>
-                                )}
-                              </div>
-                              <div className="workout-card-actions">
-                                <span className="exercise-count">{workout.exercises.length} {t.exercises}</span>
-                                {onRemoveWorkout && (
-                                  <button
-                                    className="remove-workout-btn"
-                                    onClick={() => setDeleteModal({ 
-                                      isOpen: true, 
-                                      workoutId: workout.id, 
-                                      workoutName: workout.name 
-                                    })}
-                                  >
-                                    ✕
-                                  </button>
-                                )}
+                          <div key={`template-${template.id}`} className="template-card">
+                            <div className="template-card-header">
+                              <h3 className="template-name">{template.name}</h3>
+                              <div className="template-menu" onClick={(e) => e.stopPropagation()}>
+                                <MoreMenu items={getTemplateMenuItems(template)} />
                               </div>
                             </div>
-                            <div className="workout-card-exercises">
-                              {workout.exercises.map((ex, i) => (
-                                <div key={i} className="exercise-brief">
-                                  <span className="exercise-name">{ex.name}</span>
-                                  <span className="exercise-specs">{ex.sets}x{ex.reps} @ {ex.weight}kg</span>
-                                </div>
-                              ))}
+                            <div className="template-exercises-count">
+                              <span className="exercises-count-badge">
+                                {exerciseCount} {language === 'pl' ? 'ćwiczenia' : 'exercises'}
+                              </span>
                             </div>
-                            <button
-                              className="btn primary full-width"
-                              onClick={() => setActiveWorkout(workout)}
-                            >
-                              {t.startWorkout}
-                            </button>
+                            <div className="template-actions">
+                              <button 
+                                className="btn template-start-btn"
+                                onClick={() => setActiveWorkout({
+                                  id: template.id,
+                                  name: template.name,
+                                  exercises: template.exercises || []
+                                })}
+                              >
+                                <Play size={14} strokeWidth={2} />
+                                <span>{language === 'pl' ? 'Start' : 'Start'}</span>
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
                     </div>
-                  </>
-                )}
-
-                {activeTab === 'templates' && (
-                  <>
-                    <h2 className="section-title">{t.workoutTemplates}</h2>
-                    <div className="templates-section">
-                      <div className="template-stats">
-                        <div className="stat-item">
-                          <span className="stat-number">{savedWorkouts.length}</span>
-                          <span className="stat-label">{t.workoutTemplates}</span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-number">{totalCompletedWorkouts}</span>
-                          <span className="stat-label">{t.workoutsCompleted}</span>
-                        </div>
-                      </div>
-                      <div className="saved-workouts">
-                        {savedWorkouts.map((workout) => {
-                          const completionCount = completedSessions.filter(s => s.workoutId === workout.id).length;
-                          
-                          return (
-                            <div key={workout.id} className="workout-card">
-                              <div className="workout-card-header">
-                                <div className="workout-card-title">
-                                  <h3>{workout.name}</h3>
-                                  {completionCount > 0 && (
-                                    <span className="completion-badge">{completionCount} {language === 'pl' ? 'razy' : 'times'}</span>
-                                  )}
-                                </div>
-                                <div className="workout-card-actions">
-                                  <span className="exercise-count">{workout.exercises.length} {t.exercises}</span>
-                                  {onRemoveWorkout && (
-                                    <button
-                                      className="remove-workout-btn"
-                                      onClick={() => setDeleteModal({ 
-                                        isOpen: true, 
-                                        workoutId: workout.id, 
-                                        workoutName: workout.name 
-                                      })}
-                                    >
-                                      ✕
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="workout-card-exercises">
-                                {workout.exercises.map((ex, i) => (
-                                  <div key={i} className="exercise-brief">
-                                    <span className="exercise-name">{ex.name}</span>
-                                    <span className="exercise-specs">{ex.sets}x{ex.reps} @ {ex.weight}kg</span>
-                                  </div>
-                                ))}
-                              </div>
-                              <button
-                                className="btn primary full-width"
-                                onClick={() => setActiveWorkout(workout)}
-                              >
-                                {t.startWorkout}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
-                )}
+                  )}
+                </section>
               </div>
+            )}
+
+            {activeTab === 'history' && (
+              <RecentHistory
+                completedSessions={completedSessions}
+                onDeleteSession={deleteSession}
+                language={language}
+                onRefreshStats={() => {
+                  setStatsRefreshKey(prev => prev + 1);
+                  if (onRefreshCompletedSessions) {
+                    onRefreshCompletedSessions();
+                  }
+                }}
+              />
             )}
           </div>
         )}
@@ -335,11 +441,7 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
         isOpen={deleteModal.isOpen}
         title={t.deleteWorkout}
         message={`${t.areYouSure} "${deleteModal.workoutName}"? ${t.thisActionCannotBeUndone}`}
-        onConfirm={() => {
-          onRemoveWorkout(deleteModal.workoutId);
-          setDeleteModal({ isOpen: false, workoutId: null, workoutName: '' });
-          success(t.workoutDeleted);
-        }}
+        onConfirm={handleConfirmDeleteTemplate}
         onCancel={() => setDeleteModal({ isOpen: false, workoutId: null, workoutName: '' })}
         confirmText={t.delete}
         cancelText={t.cancel}

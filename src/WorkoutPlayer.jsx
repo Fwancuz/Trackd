@@ -1,28 +1,53 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Check, Trash2 } from 'lucide-react';
 import translations from './translations';
 import ConfirmModal from './ConfirmModal';
+import HoldButton from './HoldButton';
+import MoreMenu from './MoreMenu';
 import { useToast } from './ToastContext';
 import { useRestTimer } from './useRestTimer';
+import RestTimerOverlay from './RestTimerOverlay';
 
-const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
-  const [exerciseSets, setExerciseSets] = useState(
-    workout.exercises.map((ex) => ({
-      name: ex.name,
-      targetSets: parseInt(ex.sets) || 1,
-      targetReps: ex.reps,
-      targetWeight: ex.weight,
-      sets: Array.from({ length: parseInt(ex.sets) || 1 }, (_, i) => ({
-        id: i,
-        completed: false,
-        reps: '',
-        weight: '',
+// Session Recovery Storage Key
+const STORAGE_KEY = 'trackd_active_session';
+
+const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recoveredSession = null }) => {
+  // Initialize state with recovered session or new workout
+  const initializeState = () => {
+    if (recoveredSession) {
+      // Deep clone the recovered session to prevent mutations of stored data
+      return structuredClone(recoveredSession);
+    }
+    
+    // Deep clone the workout exercises to prevent mutations of the template
+    const deepClonedExercises = structuredClone(workout.exercises);
+    
+    return {
+      exerciseSets: deepClonedExercises.map((ex) => ({
+        name: ex.name,
+        targetSets: parseInt(ex.sets) || 1,
+        targetReps: ex.reps,
+        targetWeight: ex.weight,
+        sets: Array.from({ length: parseInt(ex.sets) || 1 }, (_, i) => ({
+          id: i,
+          completed: false,
+          reps: '',
+          weight: '',
+        })),
       })),
-    }))
-  );
+      currentExerciseIndex: 0,
+      currentSetIndex: 0,
+      workoutStartTime: Date.now(),
+      workoutName: workout.name,
+    };
+  };
 
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [currentSetIndex, setCurrentSetIndex] = useState(0);
-  const [workoutStartTime] = useState(Date.now());
+  const initialState = initializeState();
+  
+  const [exerciseSets, setExerciseSets] = useState(initialState.exerciseSets);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(initialState.currentExerciseIndex);
+  const [currentSetIndex, setCurrentSetIndex] = useState(initialState.currentSetIndex);
+  const [workoutStartTime] = useState(initialState.workoutStartTime);
   const [workoutDuration, setWorkoutDuration] = useState(0);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [restTimerActive, setRestTimerActive] = useState(false);
@@ -30,6 +55,7 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
   const timer = useRestTimer(90);
   const { success } = useToast();
   const t = translations[language];
+  const stateInitializedRef = useRef(false);
 
   // Workout duration timer
   useEffect(() => {
@@ -38,6 +64,37 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
     }, 1000);
     return () => clearInterval(interval);
   }, [workoutStartTime]);
+
+  // Persist workout state to localStorage whenever it changes
+  useEffect(() => {
+    if (!stateInitializedRef.current) return;
+
+    const sessionData = {
+      workoutName: initialState.workoutName,
+      exerciseSets,
+      currentExerciseIndex,
+      currentSetIndex,
+      workoutStartTime,
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
+    } catch (error) {
+      console.error('Error saving session to localStorage:', error);
+    }
+  }, [exerciseSets, currentExerciseIndex, currentSetIndex]);
+
+  // Mark state as initialized on mount (to start persisting after first render)
+  useEffect(() => {
+    stateInitializedRef.current = true;
+  }, []);
+
+  // Close rest timer overlay when timer finishes
+  useEffect(() => {
+    if (restTimerActive && timer.timeLeft === 0) {
+      setRestTimerActive(false);
+    }
+  }, [timer.timeLeft, restTimerActive]);
 
   const currentExercise = exerciseSets[currentExerciseIndex];
   const currentSet = currentExercise?.sets[currentSetIndex];
@@ -88,7 +145,35 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
           weight: s.weight || ex.targetWeight,
         })),
     }));
-    onComplete(formattedData, workoutDuration);
+    
+    // Calculate total volume (sum of weight * reps for all completed sets)
+    const totalVolume = exerciseSets.reduce((sum, exercise) => {
+      return sum + exercise.sets
+        .filter((s) => s.completed)
+        .reduce((exSum, set) => {
+          const weight = parseFloat(set.weight) || parseFloat(exercise.targetWeight) || 0;
+          const reps = parseInt(set.reps) || parseInt(exercise.targetReps) || 0;
+          return exSum + (weight * reps);
+        }, 0);
+    }, 0);
+    
+    // Get workout name from initial state, default to 'Sesja treningowa' if not available
+    const workoutName = initialState.workoutName || 'Sesja treningowa';
+    
+    // Wrap exercises data with metadata (name stored in JSON)
+    const exercisesWithMetadata = {
+      name: workoutName,
+      data: formattedData
+    };
+    
+    // Clear session from localStorage
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Error clearing session from localStorage:', error);
+    }
+    
+    onComplete(exercisesWithMetadata, workoutDuration, workoutName, totalVolume);
     success(t.workoutCompleted || 'Workout completed!');
   };
 
@@ -121,8 +206,23 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
   };
 
   const handleCancelWorkout = () => {
-    onCancel();
+    // Clear session from localStorage
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Error clearing session from localStorage:', error);
+    }
+    
+    // Reset all local state to ensure clean state for next session
+    const resetState = initializeState();
+    setExerciseSets(resetState.exerciseSets);
+    setCurrentExerciseIndex(resetState.currentExerciseIndex);
+    setCurrentSetIndex(resetState.currentSetIndex);
+    timer.reset(90); // Reset the rest timer
+    setRestTimerActive(false);
+    
     setShowCancelModal(false);
+    onCancel();
   };
 
   const completedSetsCount = currentExercise?.sets.filter((s) => s.completed).length || 0;
@@ -147,43 +247,20 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
               </div>
             </div>
           </div>
-          <button className="cancel-btn" onClick={() => setShowCancelModal(true)}>✕</button>
+          <button className="cancel-btn" onClick={() => setShowCancelModal(true)}>
+            <X size={20} strokeWidth={1.5} />
+          </button>
         </div>
 
-        {/* Rest Timer Banner */}
-        {restTimerActive && timer.timeLeft > 0 && (
-          <div className="rest-timer-banner">
-            <div className="timer-content">
-              <span className="timer-label">{t.restTime || 'Rest Time'}</span>
-              <span className={`timer-display ${timer.timeLeft <= 15 ? 'warning' : ''}`}>
-                {timer.formatTime(timer.timeLeft)}
-              </span>
-            </div>
-            <div className="timer-controls-banner">
-              <button
-                className="timer-btn-small"
-                onClick={() => timer.pause()}
-                title={t.pause}
-              >
-                ⏸
-              </button>
-              <button
-                className="timer-btn-small"
-                onClick={() => timer.addTime(30)}
-                title={t.addTime}
-              >
-                +30s
-              </button>
-              <button
-                className="timer-btn-small"
-                onClick={() => timer.skip()}
-                title={t.skip}
-              >
-                ✓
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Rest Timer Overlay */}
+        <RestTimerOverlay
+          timer={timer}
+          isVisible={restTimerActive}
+          onSkip={timer.skip}
+          nextExerciseName={exerciseSets[currentExerciseIndex + 1]?.name || (currentSetIndex + 1 < currentExercise.sets.length ? currentExercise.name : '')}
+          nextWeight={exerciseSets[currentExerciseIndex + 1]?.targetWeight || currentExercise?.targetWeight}
+          nextReps={exerciseSets[currentExerciseIndex + 1]?.targetReps || currentExercise?.targetReps}
+        />
 
         {/* Exercise Content */}
         <div className="workout-player-content">
@@ -218,7 +295,19 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
                 >
                   <div className="set-header">
                     <span className="set-number">{t.set} {idx + 1}</span>
-                    {set.completed && <span className="set-badge-success">✓</span>}
+                    <div className="set-header-actions">
+                      {set.completed && <Check size={18} strokeWidth={2} className="set-badge-success" />}
+                      <MoreMenu 
+                        items={[
+                          {
+                            label: t.deleteSet || 'Delete Set',
+                            icon: Trash2,
+                            variant: 'danger',
+                            onClick: () => handleRemoveSet(idx)
+                          }
+                        ]}
+                      />
+                    </div>
                   </div>
 
                   <div className="set-inputs">
@@ -278,9 +367,10 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
         {/* Finish Button */}
         {totalCompletedSets > 0 && (
           <div className="workout-finish-bar">
-            <button className="btn-finish-workout" onClick={finishWorkout}>
-              {t.finishWorkout || 'Finish Workout'}
-            </button>
+            <HoldButton 
+              onComplete={finishWorkout}
+              label={t.finishWorkout || 'Finish Workout'}
+            />
             <span className="finish-note">{totalCompletedSets} {t.setsCompleted || 'sets completed'}</span>
           </div>
         )}
@@ -290,7 +380,7 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en' }) => {
       <ConfirmModal
         isOpen={showCancelModal}
         title={t.cancelWorkout || 'Cancel Workout'}
-        message={t.cancelWorkoutMessage || 'Are you sure you want to cancel this workout? Your progress will not be saved.'}
+        message={t.cancelWorkoutMessage || 'Are you sure? This will delete all progress for this session.'}
         onConfirm={handleCancelWorkout}
         onCancel={() => setShowCancelModal(false)}
         confirmText={t.yes || 'Yes'}

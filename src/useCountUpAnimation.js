@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 
 /**
  * Hook for animating a number from a start value to an end value
+ * Supports both counting up and counting down animations
  * @param {number} endValue - The target value to animate to
  * @param {number} duration - Duration of animation in milliseconds (default: 800ms)
  * @param {boolean} shouldAnimate - Whether animation should play (default: true)

@@ -3,12 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 export const useRestTimer = (initialSeconds = 90) => {
   const [timeLeft, setTimeLeft] = useState(initialSeconds);
   const [isActive, setIsActive] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
     let interval = null;
 
-    if (isActive && timeLeft > 0) {
+    if (isActive && !isPaused && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -21,6 +22,7 @@ export const useRestTimer = (initialSeconds = 90) => {
       setIsRunning(true);
     } else if (timeLeft === 0 && isActive) {
       setIsActive(false);
+      setIsPaused(false);
       setIsRunning(false);
     } else {
       setIsRunning(false);
@@ -29,19 +31,25 @@ export const useRestTimer = (initialSeconds = 90) => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft]);
+  }, [isActive, isPaused, timeLeft]);
 
   const start = useCallback(() => {
     setIsActive(true);
+    setIsPaused(false);
   }, []);
 
   const pause = useCallback(() => {
-    setIsActive(false);
+    setIsPaused(true);
+  }, []);
+
+  const resume = useCallback(() => {
+    setIsPaused(false);
   }, []);
 
   const skip = useCallback(() => {
     setTimeLeft(0);
     setIsActive(false);
+    setIsPaused(false);
   }, []);
 
   const addTime = useCallback((seconds) => {
@@ -51,6 +59,7 @@ export const useRestTimer = (initialSeconds = 90) => {
   const reset = useCallback((seconds) => {
     setTimeLeft(seconds);
     setIsActive(false);
+    setIsPaused(false);
   }, []);
 
   const formatTime = (seconds) => {
@@ -62,9 +71,11 @@ export const useRestTimer = (initialSeconds = 90) => {
   return {
     timeLeft,
     isActive,
+    isPaused,
     isRunning,
     start,
     pause,
+    resume,
     skip,
     addTime,
     reset,

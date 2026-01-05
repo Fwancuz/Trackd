@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import translations from './translations';
 import EXERCISE_LIST from './exerciseList';
+import appLogo from './assets/logonewtransparent.png';
 
 const Progress = ({ completedSessions, language = 'en' }) => {
   const t = translations[language];
@@ -40,7 +41,9 @@ const Progress = ({ completedSessions, language = 'en' }) => {
     return (
       <div className="ui-center">
         <div className="progress-content">
-          <h1 className="app-title">{t.progressGraphs}</h1>
+          <div className="flex justify-center mb-6">
+            <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+          </div>
           <p>{t.noCompleted}</p>
         </div>
       </div>
@@ -52,7 +55,9 @@ const Progress = ({ completedSessions, language = 'en' }) => {
     return (
       <div className="ui-center">
         <div className="progress-content">
-          <h1 className="app-title">{t.progressGraphs}</h1>
+          <div className="flex justify-center mb-6">
+            <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+          </div>
           <p className="progress-subtitle">{t.selectMetric || 'Choose what to track'}</p>
           
           <div className="metric-selector" style={{ marginTop: '3rem' }}>
@@ -80,22 +85,28 @@ const Progress = ({ completedSessions, language = 'en' }) => {
       <div className="ui-center">
         <div className="progress-content">
           <button className="back-btn" onClick={() => setSelectedMetric(null)}>← Back</button>
-          <h1 className="app-title">{selectedMetric === 'weight' ? t.weightProgress : t.repsProgress}</h1>
+          <div className="flex justify-center mb-6">
+            <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+          </div>
           <p className="progress-subtitle">{t.selectExercise || 'Choose an exercise'}</p>
           
           <div className="exercise-selector">
-            {EXERCISE_LIST.map((exercise) => (
-              <button
-                key={exercise}
-                className={`exercise-select-btn ${exerciseData[exercise] ? 'completed' : 'not-completed'}`}
-                onClick={() => setSelectedExercise(exercise)}
-              >
-                {exercise}
-                {exerciseData[exercise] && (
-                  <span className="exercise-count-badge">{exerciseData[exercise].length}</span>
-                )}
-              </button>
-            ))}
+            {EXERCISE_LIST.map((exercise) => {
+              const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
+              const exerciseId = typeof exercise === 'string' ? exercise : exercise.id;
+              return (
+                <button
+                  key={exerciseId}
+                  className={`exercise-select-btn ${exerciseData[exerciseName] ? 'completed' : 'not-completed'}`}
+                  onClick={() => setSelectedExercise(exerciseName)}
+                >
+                  {exerciseName}
+                  {exerciseData[exerciseName] && (
+                    <span className="exercise-count-badge">{exerciseData[exerciseName].length}</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -132,7 +143,9 @@ const Progress = ({ completedSessions, language = 'en' }) => {
       <div className="progress-content">
         <div className="graph-header">
           <button className="back-btn" onClick={() => setSelectedExercise(null)}>← Back</button>
-          <h1 className="app-title">{selectedExercise}</h1>
+          <div className="flex justify-center mb-6">
+            <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
+          </div>
         </div>
 
         <div className="exercise-graph-card full-width">

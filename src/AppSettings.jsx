@@ -46,7 +46,6 @@ const AppSettings = ({ settings, updateSettings, logout, onResetStats, onFetchSe
   return (
     <div className="ui-center">
       <div className="app-settings">
-        <h1 className="app-title">Trackd</h1>
         <div className="settings-content">
           <h2>{t.language}</h2>
           <div className="language-options">

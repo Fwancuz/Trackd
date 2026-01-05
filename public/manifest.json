@@ -1,0 +1,65 @@
+{
+  "name": "Trackd - Gym Workout Tracker",
+  "short_name": "Trackd",
+  "description": "Track your gym workouts, manage templates, and monitor your lifting progress",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#0a0a0b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/src/assets/logonew.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/src/assets/logonew.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/src/assets/logonew.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/src/assets/logonew.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/src/assets/logonew.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    },
+    {
+      "src": "/src/assets/logonew.png",
+      "sizes": "1080x1440",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["sports", "health", "fitness"],
+  "shortcuts": [
+    {
+      "name": "Create Workout",
+      "short_name": "Create",
+      "description": "Create a new workout template",
+      "url": "/?action=create",
+      "icons": [
+        {
+          "src": "/src/assets/logonew.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
