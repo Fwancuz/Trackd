@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ExerciseSelect from './ExerciseSelect';
 import translations from './translations';
 import EXERCISE_LIST from './exerciseList';
 import ConfirmModal from './ConfirmModal';
@@ -113,12 +114,25 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
         <div className="progress-content" style={{ padding: '0 16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
             <h1 className="app-title">Trackd</h1>
+            <div style={{ width: '100%', maxWidth: '300px' }}>
+              <ExerciseSelect
+                value={selectedExercise || ''}
+                onChange={(exercise) => {
+                  setSelectedExercise(exercise);
+                  setView('detail');
+                }}
+                options={exercisesWithPRs}
+                placeholder={t.selectExercise}
+              />
+            </div>
+          </div>
+          
+          <div style={{ width: '100%', maxWidth: '300px', margin: '0 auto', marginBottom: '24px' }}>
             <button 
               className="metric-btn"
               onClick={() => setView('add')}
               style={{
                 width: '100%',
-                maxWidth: '300px',
                 padding: '10px 20px',
                 fontSize: '0.9rem',
                 background: 'rgba(255, 255, 255, 0.15)',
@@ -147,31 +161,9 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
               + {t.addNewPR}
             </button>
           </div>
-          
-          <div className="exercise-selector">
-            {exercisesWithPRs.map((exercise) => {
-              const latestPR = prsByExercise[exercise][0];
-              return (
-                <button
-                  key={exercise}
-                  className="exercise-select-btn completed"
-                  onClick={() => {
-                    setSelectedExercise(exercise);
-                    setView('detail');
-                  }}
-                  style={{ textAlign: 'left', position: 'relative' }}
-                >
-                    <div style={{ flex: 1 }}>
-                    <div>{exercise}</div>
-                    <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>
-                      {latestPR.weight > 0 ? `${latestPR.weight} kg` : ''} 
-                      {latestPR.weight > 0 && latestPR.reps > 0 ? ' • ' : ''}
-                      {latestPR.reps > 0 ? `${latestPR.reps} ${language === 'pl' ? 'pow.' : 'reps'}` : ''}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+
+          <div style={{ marginTop: '24px', color: '#888', textAlign: 'center', fontSize: '0.9rem' }}>
+            {exercisesWithPRs.length} {exercisesWithPRs.length === 1 ? t.exercise || 'exercise' : t.exercises || 'exercises'} tracked
           </div>
         </div>
       </div>

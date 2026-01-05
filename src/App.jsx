@@ -7,7 +7,7 @@ import AppSettings from './AppSettings';
 import PR from './PR';
 import Verified from './Verified';
 import ResetPassword from './ResetPassword';
-import { ToastProvider } from './ToastContext';
+import { ToastProvider, useToast } from './ToastContext';
 import { useAuth } from './AuthProvider';
 import { supabase } from './supabaseClient';
 
@@ -44,11 +44,59 @@ const App = () => {
     if (user) {
       loadUserData();
     } else {
-      // If no user, stop loading immediately
+      // If no user, stop loading immediately and clear all state
       // (important for reset password flow where user is not authenticated)
       setLoading(false);
+      // Clear sensitive user data from memory to prevent data leakage between users
+      setCompletedSessions([]);
+      setPersonalRecords([]);
+      setSavedWorkoutTemplates([]);
+      setSettings({ language: 'en' });
+      setLanguage('en');
     }
   }, [user]);
+
+  // Calculate total volume from sessions data
+  // Volume = sum of (weight * reps) across all exercises and sets in all sessions
+  const calculateVolume = (sessions) => {
+    if (!sessions || sessions.length === 0) return 0;
+    
+    return sessions.reduce((total, session) => {
+      if (!session.exercises || !Array.isArray(session.exercises)) return total;
+      
+      const sessionVolume = session.exercises.reduce((sessionTotal, exercise) => {
+        if (!exercise.sets || !Array.isArray(exercise.sets)) return sessionTotal;
+        
+        const exerciseVolume = exercise.sets.reduce((setTotal, set) => {
+          const weight = parseFloat(set.weight) || parseFloat(set.actualWeight) || 0;
+          const reps = parseInt(set.reps) || parseInt(set.actualReps) || 0;
+          return setTotal + (weight * reps);
+        }, 0);
+        
+        return sessionTotal + exerciseVolume;
+      }, 0);
+      
+      return total + sessionVolume;
+    }, 0);
+  };
+
+  // Separate function to fetch sessions (reusable for Stats component)
+  const fetchCompletedSessions = async () => {
+    try {
+      const { data: sessionsData, error: sessionsError } = await supabase
+        .from('completed_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('completed_at', { ascending: false });
+      
+      if (sessionsError) throw sessionsError;
+      setCompletedSessions(sessionsData || []);
+      return sessionsData || [];
+    } catch (error) {
+      console.error('Error fetching completed sessions:', error);
+      return [];
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -64,14 +112,7 @@ const App = () => {
       setSavedWorkoutTemplates(templatesData || []);
 
       // Load completed sessions
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('completed_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('completed_at', { ascending: false });
-      
-      if (sessionsError) throw sessionsError;
-      setCompletedSessions(sessionsData || []);
+      await fetchCompletedSessions();
 
       // Load personal records
       const { data: prsData, error: prsError } = await supabase
@@ -147,7 +188,14 @@ const App = () => {
         .select();
 
       if (error) throw error;
+      
+      // Update local state first for immediate UI feedback
       setCompletedSessions([data[0], ...completedSessions]);
+      
+      // Fetch latest sessions immediately to ensure Stats gets fresh and accurate data
+      // This triggers Stats to recalculate volume with the new workout and show success message
+      await fetchCompletedSessions();
+      
     } catch (error) {
       console.error('Error saving workout session:', error);
     }
@@ -227,11 +275,53 @@ const App = () => {
     }
   };
 
+  const handleResetStats = async () => {
+    try {
+      // Delete completed sessions
+      const { error: sessionsError } = await supabase
+        .from('completed_sessions')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (sessionsError) throw sessionsError;
+
+      // Delete personal records
+      const { error: prsError } = await supabase
+        .from('personal_records')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (prsError) throw prsError;
+
+      // Update local state
+      setCompletedSessions([]);
+      setPersonalRecords([]);
+
+      // Show success message
+      // Note: useToast is only available inside ToastProvider context
+      // The toast will be shown by the component that calls this function
+    } catch (error) {
+      console.error('Error resetting statistics:', error);
+      throw error;
+    }
+  };
+
+  // Force refresh Stats data when entering the Stats tab (Silent Refresh - no loaders shown)
+  useEffect(() => {
+    if (currentPage === 'stats' && user) {
+      // Trigger a silent fetch when user navigates to Stats tab
+      // Old data remains visible while new data loads in the background
+      fetchCompletedSessions().catch(error => {
+        console.error('Error refreshing stats data on tab change:', error);
+      });
+    }
+  }, [currentPage, user, fetchCompletedSessions]);
+
   const pages = {
     home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} />,
     create: <CreateWorkout addWorkout={addWorkout} language={language} />,
     records: <PR personalRecords={personalRecords} onAddPR={addPersonalRecord} onDeletePR={deletePersonalRecord} language={language} />,
-    settings: <AppSettings settings={settings} updateSettings={updateSettings} logout={logout} />,
+    settings: <AppSettings settings={settings} updateSettings={updateSettings} logout={logout} onResetStats={handleResetStats} onFetchSessions={fetchCompletedSessions} language={language} />,
   };
 
   if (loading) {

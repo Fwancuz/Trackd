@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import translations from './translations';
 import ConfirmModal from './ConfirmModal';
+import { useToast } from './ToastContext';
 
-const AppSettings = ({ settings, updateSettings, logout }) => {
+const AppSettings = ({ settings, updateSettings, logout, onResetStats, onFetchSessions, language }) => {
   const t = translations[settings.language || 'en'];
+  const { success, error } = useToast();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showResetStatsConfirm, setShowResetStatsConfirm] = useState(false);
+  const [isResettingStats, setIsResettingStats] = useState(false);
 
   const languages = [
     { code: 'en', name: 'English' },
@@ -18,6 +22,25 @@ const AppSettings = ({ settings, updateSettings, logout }) => {
   const handleLogout = () => {
     setShowLogoutConfirm(false);
     logout();
+  };
+
+  const handleResetStatsConfirm = async () => {
+    setShowResetStatsConfirm(false);
+    setIsResettingStats(true);
+    
+    try {
+      await onResetStats();
+      // Refresh the sessions data
+      if (onFetchSessions) {
+        await onFetchSessions();
+      }
+      success(t.resetStatsSuccess);
+    } catch (err) {
+      console.error('Error resetting stats:', err);
+      error('Failed to reset statistics. Please try again.');
+    } finally {
+      setIsResettingStats(false);
+    }
   };
 
   return (
@@ -69,6 +92,40 @@ const AppSettings = ({ settings, updateSettings, logout }) => {
             >
               {t.logout}
             </button>
+
+            {/* Reset Statistics Button */}
+            <button
+              onClick={() => setShowResetStatsConfirm(true)}
+              disabled={isResettingStats}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                marginTop: '1rem',
+                backgroundColor: 'transparent',
+                color: '#ff6b6b',
+                border: '2px solid #ff6b6b',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                fontWeight: '500',
+                cursor: isResettingStats ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                opacity: isResettingStats ? 0.6 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isResettingStats) {
+                  e.target.style.backgroundColor = '#ff6b6b';
+                  e.target.style.color = '#fff';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isResettingStats) {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.color = '#ff6b6b';
+                }
+              }}
+            >
+              {isResettingStats ? 'Resetting...' : t.resetStats}
+            </button>
           </div>
         </div>
       </div>
@@ -79,6 +136,17 @@ const AppSettings = ({ settings, updateSettings, logout }) => {
         message={t.logoutConfirm}
         onConfirm={handleLogout}
         onCancel={() => setShowLogoutConfirm(false)}
+        confirmText={t.yes || 'Yes'}
+        cancelText={t.no || 'No'}
+        isDangerous={true}
+      />
+
+      <ConfirmModal
+        isOpen={showResetStatsConfirm}
+        title={t.resetStats}
+        message={t.resetStatsConfirm}
+        onConfirm={handleResetStatsConfirm}
+        onCancel={() => setShowResetStatsConfirm(false)}
         confirmText={t.yes || 'Yes'}
         cancelText={t.no || 'No'}
         isDangerous={true}

@@ -92,6 +92,9 @@ const translations = {
     account: 'Account',
     logout: 'Log Out',
     logoutConfirm: 'Are you sure you want to log out?',
+    resetStats: 'Reset Statistics',
+    resetStatsConfirm: 'Are you sure you want to reset all your statistics? This action cannot be undone.',
+    resetStatsSuccess: 'Statistics have been reset.',
   },
   pl: {
     // App Navigation
@@ -186,6 +189,9 @@ const translations = {
     account: 'Konto',
     logout: 'Wyloguj',
     logoutConfirm: 'Czy na pewno chcesz się wylogować?',
+    resetStats: 'Zresetuj Statystyki',
+    resetStatsConfirm: 'Czy na pewno chcesz zresetować wszystkie statystyki? Tej operacji nie da się cofnąć.',
+    resetStatsSuccess: 'Statystyki zostały zresetowane.',
   }
 };
 
