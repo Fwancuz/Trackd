@@ -3,6 +3,8 @@
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'motion/react';
 import { Children, cloneElement, useEffect, useMemo, useRef, useState } from 'react';
 
+const MotionDiv = motion.div;
+
 // import './Dock.css';
 
 function DockItem({ children, className = '', onClick, mouseX, spring, distance, magnification, baseItemSize }) {
@@ -21,7 +23,7 @@ function DockItem({ children, className = '', onClick, mouseX, spring, distance,
   const scale = useSpring(useTransform(targetSize, s => s / baseItemSize), spring);
 
   return (
-    <motion.div
+    <MotionDiv
       ref={ref}
       style={{
         width: baseItemSize,
@@ -39,7 +41,7 @@ function DockItem({ children, className = '', onClick, mouseX, spring, distance,
       aria-haspopup="true"
     >
       {Children.map(children, child => cloneElement(child, { isHovered }))}
-    </motion.div>
+    </MotionDiv>
   );
 }
 
@@ -57,7 +59,7 @@ function DockLabel({ children, className = '', ...rest }) {
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 0 }}
           animate={{ opacity: 1, y: -10 }}
           exit={{ opacity: 0, y: 0 }}
@@ -67,7 +69,7 @@ function DockLabel({ children, className = '', ...rest }) {
           style={{ x: '-50%' }}
         >
           {children}
-        </motion.div>
+        </MotionDiv>
       )}
     </AnimatePresence>
   );
@@ -98,8 +100,8 @@ export default function Dock({
   const height = useSpring(heightRow, spring);
 
   return (
-    <motion.div style={{ height, scrollbarWidth: 'none' }} className="dock-outer">
-      <motion.div
+    <MotionDiv style={{ height, scrollbarWidth: 'none' }} className="dock-outer">
+      <MotionDiv
         onMouseMove={({ pageX }) => {
           isHovered.set(1);
           mouseX.set(pageX);
@@ -127,7 +129,7 @@ export default function Dock({
             <DockIcon>{item.icon}</DockIcon>
           </DockItem>
         ))}
-      </motion.div>
-    </motion.div>
+      </MotionDiv>
+    </MotionDiv>
   );
 }

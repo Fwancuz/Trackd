@@ -17,9 +17,15 @@ export const useCountUpAnimation = (endValue, duration = 800, shouldAnimate = tr
   useEffect(() => {
     // If values are the same, no animation needed
     if (previousValueRef.current === endValue || !shouldAnimate) {
-      setDisplayValue(endValue);
+      // Avoid setState directly in effect body
+      if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+      animationTimeoutRef.current = setTimeout(() => {
+        setDisplayValue(endValue);
+      }, 0);
       previousValueRef.current = endValue;
-      return;
+      return () => {
+        if (animationTimeoutRef.current) clearTimeout(animationTimeoutRef.current);
+      };
     }
 
     const startValue = previousValueRef.current;

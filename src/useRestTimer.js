@@ -4,7 +4,7 @@ export const useRestTimer = (initialSeconds = 90) => {
   const [timeLeft, setTimeLeft] = useState(initialSeconds);
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
+  const isRunning = isActive && !isPaused && timeLeft > 0;
 
   useEffect(() => {
     let interval = null;
@@ -19,13 +19,6 @@ export const useRestTimer = (initialSeconds = 90) => {
           return prev - 1;
         });
       }, 1000);
-      setIsRunning(true);
-    } else if (timeLeft === 0 && isActive) {
-      setIsActive(false);
-      setIsPaused(false);
-      setIsRunning(false);
-    } else {
-      setIsRunning(false);
     }
 
     return () => {

@@ -47,17 +47,16 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
     }
   };
 
-  const handleDeletePR = (prId) => {
-    onDeletePR(prId);
-  };
-
   // If we're in detail view and the selected exercise has no records left, go back to list
   useEffect(() => {
     if (view === 'detail' && selectedExercise) {
       const records = prsByExercise[selectedExercise];
       if (!records || records.length === 0) {
-        setView('list');
-        setSelectedExercise(null);
+        const timeoutId = setTimeout(() => {
+          setView('list');
+          setSelectedExercise(null);
+        }, 0);
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [prsByExercise, view, selectedExercise]);

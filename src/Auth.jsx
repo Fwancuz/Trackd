@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 import Aurora from './Aurora';
 import appLogo from './assets/logonewtransparent.png';
 
-const Auth = ({ onAuthStateChange }) => {
+const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

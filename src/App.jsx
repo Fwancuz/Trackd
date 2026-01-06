@@ -7,7 +7,7 @@ import AppSettings from './AppSettings';
 import PR from './PR';
 import Verified from './Verified';
 import ResetPassword from './ResetPassword';
-import { ToastProvider, useToast } from './ToastContext';
+import { ToastProvider } from './ToastContext';
 import { useAuth } from './AuthProvider';
 import { supabase } from './supabaseClient';
 
@@ -20,7 +20,6 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isVerified, setIsVerified] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
-  const [workouts, setWorkouts] = useState([]);
   const [savedWorkoutTemplates, setSavedWorkoutTemplates] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
   const [personalRecords, setPersonalRecords] = useState([]);
@@ -76,30 +75,6 @@ const App = () => {
       setLanguage('en');
     }
   }, [user]);
-
-  // Calculate total volume from sessions data
-  // Volume = sum of (weight * reps) across all exercises and sets in all sessions
-  const calculateVolume = (sessions) => {
-    if (!sessions || sessions.length === 0) return 0;
-    
-    return sessions.reduce((total, session) => {
-      if (!session.exercises || !Array.isArray(session.exercises)) return total;
-      
-      const sessionVolume = session.exercises.reduce((sessionTotal, exercise) => {
-        if (!exercise.sets || !Array.isArray(exercise.sets)) return sessionTotal;
-        
-        const exerciseVolume = exercise.sets.reduce((setTotal, set) => {
-          const weight = parseFloat(set.weight) || parseFloat(set.actualWeight) || 0;
-          const reps = parseInt(set.reps) || parseInt(set.actualReps) || 0;
-          return setTotal + (weight * reps);
-        }, 0);
-        
-        return sessionTotal + exerciseVolume;
-      }, 0);
-      
-      return total + sessionVolume;
-    }, 0);
-  };
 
   // Separate function to fetch sessions (reusable for Stats component)
   const fetchCompletedSessions = async () => {
@@ -194,7 +169,7 @@ const App = () => {
     }
   };
 
-  const completeWorkoutSession = async (workoutId, exerciseData, duration = 0, workoutName = null, totalVolume = 0) => {
+  const completeWorkoutSession = async (workoutId, exerciseData, duration = 0) => {
     try {
       // Only save columns that exist in the database
       const sessionToSave = {

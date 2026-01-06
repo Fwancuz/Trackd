@@ -10,15 +10,39 @@ import { useWorkoutHistory } from './useWorkoutHistory';
 import { supabase } from './supabaseClient';
 import appLogo from './assets/logonewtransparent.png';
 
-const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 'en', onRemoveWorkout, recoveredSession = null, userId = null, onRefreshCompletedSessions = null, onEditTemplate = null, onNavigateToCreate = null }) => {
-  const [activeWorkout, setActiveWorkout] = useState(null);
+const CURRENT_WORKOUT_KEY = 'current_workout';
+const ACTIVE_SESSION_KEY = 'trackd_active_session';
+
+const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recoveredSession = null, userId = null, onRefreshCompletedSessions = null, onEditTemplate = null, onNavigateToCreate = null }) => {
+  const [activeWorkout, setActiveWorkout] = useState(() => {
+    try {
+      const savedWorkout = localStorage.getItem(CURRENT_WORKOUT_KEY);
+      if (savedWorkout) return JSON.parse(savedWorkout) || null;
+
+      const savedSession = localStorage.getItem(ACTIVE_SESSION_KEY);
+      if (savedSession) {
+        const sessionData = JSON.parse(savedSession);
+        return {
+          name: sessionData.workoutName,
+          exercises: [],
+        };
+      }
+    } catch {
+      try {
+        localStorage.removeItem(CURRENT_WORKOUT_KEY);
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, workoutId: null, workoutName: '' });
   const [activeTab, setActiveTab] = useState('plans'); // 'plans', 'history', 'total'
   const [lastCompletedVolume, setLastCompletedVolume] = useState(null);
   const [showCompletionMessage, setShowCompletionMessage] = useState(false);
   const [statsRefreshKey, setStatsRefreshKey] = useState(0);
   const [templates, setTemplates] = useState([]);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [_loadingTemplates, setLoadingTemplates] = useState(false);
   const { success } = useToast();
   const t = translations[language];
   
@@ -63,51 +87,59 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
     }
   }, [recoveredSession]);
 
-  // Sync with localStorage when app comes back to focus (handles phone wake-up)
+  // Sync with localStorage on wake-up / bfcache restore (mobile-friendly)
   useEffect(() => {
-    const STORAGE_KEY = 'trackd_active_session';
-    
-    const handleFocusOrVisibility = () => {
+    const syncFromStorage = () => {
       try {
-        const savedSession = localStorage.getItem(STORAGE_KEY);
-        
-        if (savedSession) {
-          // Active session exists in localStorage - restore it
-          const sessionData = JSON.parse(savedSession);
-          setActiveWorkout({
-            name: sessionData.workoutName,
-            exercises: [], // Exercises are already in recovered state
-          });
-          console.log('Synced active workout from localStorage on focus');
-        } else {
-          // No active session - ensure activeWorkout is null
-          // This prevents "ghost" workouts from persisting
-          if (activeWorkout) {
-            setActiveWorkout(null);
-            console.log('Cleared ghost workout - no session in localStorage');
-          }
+        const savedWorkout = localStorage.getItem(CURRENT_WORKOUT_KEY);
+        if (savedWorkout) {
+          setActiveWorkout(JSON.parse(savedWorkout) || null);
+          return;
         }
+
+        const savedSession = localStorage.getItem(ACTIVE_SESSION_KEY);
+        if (savedSession) {
+          const sessionData = JSON.parse(savedSession);
+          const fallbackWorkout = {
+            name: sessionData.workoutName,
+            exercises: [],
+          };
+          try {
+            localStorage.setItem(CURRENT_WORKOUT_KEY, JSON.stringify(fallbackWorkout));
+          } catch {
+            // ignore
+          }
+          setActiveWorkout(fallbackWorkout);
+          return;
+        }
+
+        setActiveWorkout(null);
       } catch (error) {
         console.error('Error syncing workout from localStorage:', error);
-        // If parsing fails, clear the corrupted data
         try {
-          localStorage.removeItem(STORAGE_KEY);
-        } catch (removeError) {
-          console.error('Error removing corrupted session:', removeError);
+          localStorage.removeItem(CURRENT_WORKOUT_KEY);
+        } catch {
+          // ignore
         }
+        setActiveWorkout(null);
       }
     };
 
-    // Listen for visibility changes (primary event for mobile wake-up)
-    document.addEventListener('visibilitychange', handleFocusOrVisibility);
-    // Listen for focus event as fallback for desktop browsers
-    window.addEventListener('focus', handleFocusOrVisibility);
+    const handlePageShow = () => syncFromStorage();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncFromStorage();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleFocusOrVisibility);
-      window.removeEventListener('focus', handleFocusOrVisibility);
+      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [activeWorkout]);
+  }, []);
 
   /**
    * Handle create new template - navigate to create view
@@ -224,12 +256,6 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
     };
   }, [completedSessions]);
 
-  // Calculate chart data from completed sessions for progress visualization
-  const chartData = useMemo(() => {
-    // For now, chart data is not used - keeping calculation for future
-    return [];
-  }, [completedSessions]);
-
   // Rank system with Lucide icons
   const RankIcon = ({ tier }) => {
     const iconProps = { size: 20, strokeWidth: 1.5 };
@@ -283,6 +309,13 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
           setShowCompletionMessage(true);
           setTimeout(() => setShowCompletionMessage(false), 4000);
           onWorkoutComplete(activeWorkout.id, exerciseData, duration, workoutName, totalVolume);
+          // Hard clear first (prevents "ghost" workout on refresh)
+          try {
+            localStorage.removeItem(CURRENT_WORKOUT_KEY);
+            localStorage.removeItem(ACTIVE_SESSION_KEY);
+          } catch (error) {
+            console.error('Error clearing localStorage:', error);
+          }
           setActiveWorkout(null);
           // Refresh plans section after completing workout
           if (onRefreshCompletedSessions) {
@@ -290,13 +323,14 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
           }
         }}
         onCancel={() => {
-          setActiveWorkout(null);
-          // Ensure localStorage is cleared and refresh stats when canceling
+          // Hard clear first (prevents "ghost" workout on refresh)
           try {
-            localStorage.removeItem('trackd_active_session');
+            localStorage.removeItem(CURRENT_WORKOUT_KEY);
+            localStorage.removeItem(ACTIVE_SESSION_KEY);
           } catch (error) {
             console.error('Error clearing localStorage:', error);
           }
+          setActiveWorkout(null);
           if (onRefreshCompletedSessions) {
             onRefreshCompletedSessions();
           }
@@ -306,9 +340,6 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
       />
     );
   }
-
-  // Calculate total completed workouts
-  const totalCompletedWorkouts = completedSessions.length;
 
   return (
     <div className="ui-center">
@@ -461,11 +492,19 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
                             <div className="template-actions">
                               <button 
                                 className="btn template-start-btn"
-                                onClick={() => setActiveWorkout({
-                                  id: template.id,
-                                  name: template.name,
-                                  exercises: template.exercises || []
-                                })}
+                                onClick={() => {
+                                  const workoutToStart = {
+                                    id: template.id,
+                                    name: template.name,
+                                    exercises: template.exercises || [],
+                                  };
+                                  try {
+                                    localStorage.setItem(CURRENT_WORKOUT_KEY, JSON.stringify(workoutToStart));
+                                  } catch (error) {
+                                    console.error('Error saving current_workout:', error);
+                                  }
+                                  setActiveWorkout(workoutToStart);
+                                }}
                               >
                                 <Play size={14} strokeWidth={2} />
                                 <span>{language === 'pl' ? 'Start' : 'Start'}</span>

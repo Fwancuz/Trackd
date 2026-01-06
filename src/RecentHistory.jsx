@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
-import translations from './translations';
 import './index.css';
 
 const RecentHistory = ({ completedSessions, onDeleteSession, language = 'en', onRefreshStats }) => {
-  const t = translations[language];
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, sessionId: null, sessionName: '' });
   const [touchStart, setTouchStart] = useState(null);
   const [activeSwipeId, setActiveSwipeId] = useState(null);

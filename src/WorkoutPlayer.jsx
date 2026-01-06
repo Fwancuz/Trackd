@@ -10,6 +10,9 @@ import RestTimerOverlay from './RestTimerOverlay';
 
 // Session Recovery Storage Key
 const STORAGE_KEY = 'trackd_active_session';
+const CURRENT_WORKOUT_KEY = 'current_workout';
+
+const getNow = () => Date.now();
 
 const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recoveredSession = null }) => {
   // Initialize state with recovered session or new workout
@@ -37,17 +40,17 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
       })),
       currentExerciseIndex: 0,
       currentSetIndex: 0,
-      workoutStartTime: Date.now(),
+      workoutStartTime: getNow(),
       workoutName: workout.name,
     };
   };
 
-  const initialState = initializeState();
+  const [initialState] = useState(() => initializeState());
   
-  const [exerciseSets, setExerciseSets] = useState(initialState.exerciseSets);
-  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(initialState.currentExerciseIndex);
-  const [currentSetIndex, setCurrentSetIndex] = useState(initialState.currentSetIndex);
-  const [workoutStartTime] = useState(initialState.workoutStartTime);
+  const [exerciseSets, setExerciseSets] = useState(() => initialState.exerciseSets);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(() => initialState.currentExerciseIndex);
+  const [currentSetIndex, setCurrentSetIndex] = useState(() => initialState.currentSetIndex);
+  const [workoutStartTime] = useState(() => initialState.workoutStartTime);
   const [workoutDuration, setWorkoutDuration] = useState(0);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [restTimerActive, setRestTimerActive] = useState(false);
@@ -87,17 +90,29 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
   // Mark state as initialized on mount (to start persisting after first render)
   useEffect(() => {
     stateInitializedRef.current = true;
+
+    // Persist a minimal marker so Home can lazy-init and show resume instantly
+    try {
+      localStorage.setItem(
+        CURRENT_WORKOUT_KEY,
+        JSON.stringify({ name: initialState.workoutName, exercises: [] })
+      );
+    } catch (error) {
+      console.error('Error saving current_workout marker:', error);
+    }
   }, []);
 
   // Close rest timer overlay when timer finishes
   useEffect(() => {
     if (restTimerActive && timer.timeLeft === 0) {
-      setRestTimerActive(false);
+      const timeoutId = setTimeout(() => {
+        setRestTimerActive(false);
+      }, 0);
+      return () => clearTimeout(timeoutId);
     }
   }, [timer.timeLeft, restTimerActive]);
 
   const currentExercise = exerciseSets[currentExerciseIndex];
-  const currentSet = currentExercise?.sets[currentSetIndex];
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -166,8 +181,9 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
       data: formattedData
     };
     
-    // Clear session from localStorage
+    // Clear session from localStorage (hard clear first)
     try {
+      localStorage.removeItem(CURRENT_WORKOUT_KEY);
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.error('Error clearing session from localStorage:', error);
@@ -206,8 +222,9 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
   };
 
   const handleCancelWorkout = () => {
-    // Clear session from localStorage
+    // Clear session from localStorage (hard clear first)
     try {
+      localStorage.removeItem(CURRENT_WORKOUT_KEY);
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.error('Error clearing session from localStorage:', error);
@@ -225,7 +242,6 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
     onCancel();
   };
 
-  const completedSetsCount = currentExercise?.sets.filter((s) => s.completed).length || 0;
   const totalCompletedSets = exerciseSets.reduce((acc, ex) => acc + ex.sets.filter((s) => s.completed).length, 0);
   const totalSets = exerciseSets.reduce((acc, ex) => acc + ex.sets.length, 0);
 

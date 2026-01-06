@@ -1,6 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 
+const getNow = () => Date.now();
+const MotionDiv = motion.div;
+const MotionCircle = motion.circle;
+
 const RestTimerOverlay = ({ 
   timer, 
   isVisible, 
@@ -16,11 +20,11 @@ const RestTimerOverlay = ({
 
   const handleCirclePointerDown = (e) => {
     e.preventDefault();
-    holdStartTimeRef.current = Date.now();
+    holdStartTimeRef.current = getNow();
     
     const updateHoldProgress = () => {
       if (holdStartTimeRef.current) {
-        const elapsed = Date.now() - holdStartTimeRef.current;
+        const elapsed = getNow() - holdStartTimeRef.current;
         const progress = Math.min((elapsed / HOLD_DURATION) * 100, 100);
         setHoldProgress(progress);
         
@@ -71,7 +75,7 @@ const RestTimerOverlay = ({
   const isLowTime = timer.timeLeft <= 10;
 
   return (
-    <motion.div
+    <MotionDiv
       className="rest-timer-overlay"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -85,7 +89,7 @@ const RestTimerOverlay = ({
       <div className="rest-timer-content-container">
         
         {/* TOP SECTION: Next exercise info */}
-        <motion.div 
+        <MotionDiv 
           className="timer-section timer-section-top"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -100,11 +104,11 @@ const RestTimerOverlay = ({
               <span>{nextWeight} kg</span>
             </div>
           </div>
-        </motion.div>
+        </MotionDiv>
 
         {/* MIDDLE SECTION: Timer circle - perfectly centered regardless of text changes */}
         <div className="timer-section timer-section-middle">
-          <motion.div
+          <MotionDiv
             className={`timer-circle-wrapper ${timer.isPaused ? 'paused' : ''}`}
             animate={{
               scale: timer.isPaused ? 0.95 : 1,
@@ -129,7 +133,7 @@ const RestTimerOverlay = ({
               className={timer.isPaused ? 'dimmed' : ''}
             />
             {/* Progress circle */}
-            <motion.circle
+            <MotionCircle
               cx="50"
               cy="50"
               r="45"
@@ -148,7 +152,7 @@ const RestTimerOverlay = ({
             />
             {/* Hold progress circle (glow effect) */}
             {holdProgress > 0 && (
-              <motion.circle
+              <MotionCircle
                 cx="50"
                 cy="50"
                 r="45"
@@ -163,7 +167,7 @@ const RestTimerOverlay = ({
 
             {/* Paused indicator - only shown when paused */}
             {timer.isPaused && (
-              <motion.div
+              <MotionDiv
                 className="paused-label"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -171,32 +175,32 @@ const RestTimerOverlay = ({
                 transition={{ duration: 0.2 }}
               >
                 Paused
-              </motion.div>
+              </MotionDiv>
             )}
 
             {/* Timer display in center */}
-            <motion.div
+            <MotionDiv
               className={`timer-display-center ${isLowTime && !timer.isPaused ? 'low-time' : ''} ${timer.isPaused ? 'dimmed' : ''}`}
               animate={isLowTime && !timer.isPaused ? { scale: [1, 1.05, 1] } : {}}
               transition={isLowTime && !timer.isPaused ? { duration: 0.6, repeat: Infinity } : {}}
             >
               <div className="timer-number">{timer.formatTime(timer.timeLeft)}</div>
-            </motion.div>
+            </MotionDiv>
 
             {/* Hold fill indicator - shows as colored ring filling up */}
             {holdProgress > 0 && (
-              <motion.div
+              <MotionDiv
                 className="hold-fill"
                 style={{
                   background: `conic-gradient(#ff6b6b ${holdProgress * 3.6}deg, transparent ${holdProgress * 3.6}deg)`,
                 }}
               />
             )}
-          </motion.div>
+          </MotionDiv>
         </div>
 
         {/* BOTTOM SECTION: Gesture hints */}
-        <motion.div 
+        <MotionDiv 
           className="timer-section timer-section-bottom"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -205,9 +209,9 @@ const RestTimerOverlay = ({
           <div className="gesture-hints">
             <span className="hint-text">Tap to pause • Hold to skip</span>
           </div>
-        </motion.div>
+        </MotionDiv>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 };
 
