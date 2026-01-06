@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react'
-import Aurora from './Aurora';
+import React, { useState, useEffect, startTransition } from 'react'
 import { VscHome, VscArchive, VscSettingsGear, VscSymbolMisc } from 'react-icons/vsc';
 import Home from './Home';
 import CreateWorkout from './CreateWorkout';
@@ -26,7 +25,25 @@ const App = () => {
   const [language, setLanguage] = useState('en');
   const [settings, setSettings] = useState({ language: 'en' });
   const [loading, setLoading] = useState(true);
-  const [recoveredSession, setRecoveredSession] = useState(null);
+  const [recoveredSession, setRecoveredSession] = useState(() => {
+    try {
+      const savedSession = localStorage.getItem(STORAGE_KEY);
+      if (!savedSession) return null;
+      const sessionData = JSON.parse(savedSession);
+
+      const hasWorkoutName = typeof sessionData?.workoutName === 'string' && sessionData.workoutName.trim().length > 0;
+      const hasExerciseSets = Array.isArray(sessionData?.exerciseSets) && sessionData.exerciseSets.length > 0;
+      const hasSetsArrays = hasExerciseSets && sessionData.exerciseSets.every((ex) => Array.isArray(ex?.sets));
+
+      if (hasWorkoutName && hasExerciseSets && hasSetsArrays) return sessionData;
+
+      // Don't delete user's session on transient/local parse/shape issues.
+      return null;
+    } catch (error) {
+      console.error('Error recovering session from localStorage:', error);
+      return null;
+    }
+  });
   const [editingTemplate, setEditingTemplate] = useState(null);
 
   // Check for verified parameter and reset-password route in URL
@@ -43,20 +60,51 @@ const App = () => {
     }
   }, []);
 
-  // Check for recovered session in localStorage on mount
+  // If a recovered session exists, ensure we're on Home so it can resume
   useEffect(() => {
-    try {
-      const savedSession = localStorage.getItem(STORAGE_KEY);
-      if (savedSession) {
-        const sessionData = JSON.parse(savedSession);
-        setRecoveredSession(sessionData);
-        // Auto-navigate to home where WorkoutPlayer will be rendered with recovered data
-        setCurrentPage('home');
-      }
-    } catch (error) {
-      console.error('Error recovering session from localStorage:', error);
-      localStorage.removeItem(STORAGE_KEY);
+    if (recoveredSession) {
+      setCurrentPage('home');
     }
+  }, [recoveredSession]);
+
+  // Re-sync recovery on tab wake/bfcache and on storage changes (mobile-friendly)
+  useEffect(() => {
+    const tryReadSession = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          startTransition(() => setRecoveredSession(null));
+          return;
+        }
+        const data = JSON.parse(raw);
+        const hasWorkoutName = typeof data?.workoutName === 'string' && data.workoutName.trim().length > 0;
+        const hasExerciseSets = Array.isArray(data?.exerciseSets) && data.exerciseSets.length > 0;
+        const hasSetsArrays = hasExerciseSets && data.exerciseSets.every((ex) => Array.isArray(ex?.sets));
+        if (hasWorkoutName && hasExerciseSets && hasSetsArrays) {
+          startTransition(() => setRecoveredSession(data));
+        }
+      } catch (error) {
+        console.error('Error re-syncing session from localStorage:', error);
+      }
+    };
+
+    const scheduleSync = () => setTimeout(tryReadSession, 50);
+
+    const handlePageShow = () => scheduleSync();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') scheduleSync();
+    };
+    const handleStorage = () => tryReadSession();
+
+    window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   // Load all user data from Supabase on mount
@@ -326,7 +374,7 @@ const App = () => {
 
   if (loading) {
     return (
-      <div className="app-main flex items-center justify-center">
+      <div key="app-loading" className="app-main flex items-center justify-center" suppressHydrationWarning>
         <div className="text-white text-center">
           <div className="animate-spin mb-4">⚙️</div>
           <p>Loading your workouts...</p>
@@ -337,28 +385,33 @@ const App = () => {
 
   // Show reset password page if on /reset-password route (before checking user)
   if (isResetPassword) {
-    return <ResetPassword />;
+    return (
+      <div key="app-reset-password" suppressHydrationWarning>
+        <ResetPassword />
+      </div>
+    );
   }
 
   // Show verified page if verified parameter is present
   if (isVerified) {
-    return <Verified />;
+    return (
+      <div key="app-verified" suppressHydrationWarning>
+        <Verified />
+      </div>
+    );
   }
 
   return (
     <ToastProvider>
-      <div className="app-main">
-        {isMobile && (
-          <div className="aurora-bg">
-            <Aurora
-              colorStops={["#3A29FF", "#FF94B4", "#FF3232"]}
-              blend={0.5}
-              amplitude={1.0}
-              speed={0.5}
-            />
-          </div>
-        )}
-        {pages[currentPage]}
+      <div key="main-container" className="app-main relative overflow-hidden bg-slate-950 min-h-screen">
+        {/* Deep Space background with static blur elements */}
+        <div className="pointer-events-none fixed inset-0 -z-10">
+          <div className="w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+          <div className="w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+        </div>
+        <div key={`page-${currentPage}`}>
+          {pages[currentPage]}
+        </div>
         <nav className="bottom-nav">
           <div className="nav-item" onClick={() => setCurrentPage('home')}>
             <span className="nav-icon"><VscHome size={18} /></span>

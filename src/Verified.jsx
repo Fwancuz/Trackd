@@ -1,18 +1,12 @@
 import React from 'react';
 import { FiCheckCircle } from 'react-icons/fi';
-import Aurora from './Aurora';
 
 const Verified = () => {
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gray-900">
-      {/* Aurora Background */}
-      <div className="absolute inset-0 aurora-bg">
-        <Aurora
-          colorStops={["#3A29FF", "#FF94B4", "#FF3232"]}
-          blend={0.5}
-          amplitude={1.0}
-          speed={0.5}
-        />
+    <div key="verified-container" className="relative w-full h-screen overflow-hidden bg-slate-950">
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+        <div className="w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
       </div>
 
       {/* Content Container */}

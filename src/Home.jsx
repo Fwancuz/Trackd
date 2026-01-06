@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, startTransition } from 'react';
 import { Medal, Trophy, Zap, Target, History, Clock, Play, Pencil, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import WorkoutPlayer from './WorkoutPlayer';
 import ConfirmModal from './ConfirmModal';
@@ -10,29 +10,22 @@ import { useWorkoutHistory } from './useWorkoutHistory';
 import { supabase } from './supabaseClient';
 import appLogo from './assets/logonewtransparent.png';
 
-const CURRENT_WORKOUT_KEY = 'current_workout';
 const ACTIVE_SESSION_KEY = 'trackd_active_session';
 
 const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recoveredSession = null, userId = null, onRefreshCompletedSessions = null, onEditTemplate = null, onNavigateToCreate = null }) => {
   const [activeWorkout, setActiveWorkout] = useState(() => {
     try {
-      const savedWorkout = localStorage.getItem(CURRENT_WORKOUT_KEY);
-      if (savedWorkout) return JSON.parse(savedWorkout) || null;
-
       const savedSession = localStorage.getItem(ACTIVE_SESSION_KEY);
       if (savedSession) {
         const sessionData = JSON.parse(savedSession);
+        if (!sessionData || !sessionData.workoutName) return null;
         return {
           name: sessionData.workoutName,
           exercises: [],
         };
       }
     } catch {
-      try {
-        localStorage.removeItem(CURRENT_WORKOUT_KEY);
-      } catch {
-        // ignore
-      }
+      // Don't delete user's session on transient/local parse issues.
     }
     return null;
   });
@@ -91,53 +84,49 @@ const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recovered
   useEffect(() => {
     const syncFromStorage = () => {
       try {
-        const savedWorkout = localStorage.getItem(CURRENT_WORKOUT_KEY);
-        if (savedWorkout) {
-          setActiveWorkout(JSON.parse(savedWorkout) || null);
-          return;
-        }
-
         const savedSession = localStorage.getItem(ACTIVE_SESSION_KEY);
         if (savedSession) {
           const sessionData = JSON.parse(savedSession);
-          const fallbackWorkout = {
-            name: sessionData.workoutName,
-            exercises: [],
-          };
-          try {
-            localStorage.setItem(CURRENT_WORKOUT_KEY, JSON.stringify(fallbackWorkout));
-          } catch {
-            // ignore
+          if (sessionData && sessionData.workoutName) {
+            startTransition(() => {
+              setActiveWorkout({ name: sessionData.workoutName, exercises: [] });
+            });
+          } else {
+            startTransition(() => setActiveWorkout(null));
           }
-          setActiveWorkout(fallbackWorkout);
           return;
         }
 
-        setActiveWorkout(null);
+        startTransition(() => setActiveWorkout(null));
       } catch (error) {
         console.error('Error syncing workout from localStorage:', error);
-        try {
-          localStorage.removeItem(CURRENT_WORKOUT_KEY);
-        } catch {
-          // ignore
-        }
-        setActiveWorkout(null);
+        // Don't delete user's session on transient/local parse issues.
+        startTransition(() => setActiveWorkout(null));
       }
     };
 
-    const handlePageShow = () => syncFromStorage();
+    const scheduleSync = () => {
+      // Mobile wake-up/bfcache: give the browser a moment before reading storage
+      setTimeout(syncFromStorage, 50);
+    };
+
+    const handlePageShow = () => scheduleSync();
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        syncFromStorage();
+        scheduleSync();
       }
     };
+
+    const handleStorage = () => syncFromStorage();
 
     window.addEventListener('pageshow', handlePageShow);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorage);
 
     return () => {
       window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorage);
     };
   }, []);
 
@@ -300,49 +289,56 @@ const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recovered
 
   if (activeWorkout) {
     return (
-      <WorkoutPlayer
-        workout={activeWorkout}
-        onComplete={(exerciseData, duration, workoutName, totalVolume) => {
-          // Use the passed volume instead of calculating it
-          const sessionVolume = totalVolume || 0;
-          setLastCompletedVolume(sessionVolume);
-          setShowCompletionMessage(true);
-          setTimeout(() => setShowCompletionMessage(false), 4000);
-          onWorkoutComplete(activeWorkout.id, exerciseData, duration, workoutName, totalVolume);
-          // Hard clear first (prevents "ghost" workout on refresh)
-          try {
-            localStorage.removeItem(CURRENT_WORKOUT_KEY);
-            localStorage.removeItem(ACTIVE_SESSION_KEY);
-          } catch (error) {
-            console.error('Error clearing localStorage:', error);
-          }
-          setActiveWorkout(null);
-          // Refresh plans section after completing workout
-          if (onRefreshCompletedSessions) {
-            onRefreshCompletedSessions();
-          }
-        }}
-        onCancel={() => {
-          // Hard clear first (prevents "ghost" workout on refresh)
-          try {
-            localStorage.removeItem(CURRENT_WORKOUT_KEY);
-            localStorage.removeItem(ACTIVE_SESSION_KEY);
-          } catch (error) {
-            console.error('Error clearing localStorage:', error);
-          }
-          setActiveWorkout(null);
-          if (onRefreshCompletedSessions) {
-            onRefreshCompletedSessions();
-          }
-        }}
-        language={language}
-        recoveredSession={recoveredSession}
-      />
+      <div key="player">
+        <WorkoutPlayer
+          workout={activeWorkout}
+          onComplete={(exerciseData, duration, workoutName, totalVolume) => {
+            const workoutId = activeWorkout?.id;
+            // Use the passed volume instead of calculating it
+            const sessionVolume = totalVolume || 0;
+            setLastCompletedVolume(sessionVolume);
+            setShowCompletionMessage(true);
+            setTimeout(() => setShowCompletionMessage(false), 4000);
+            // Hard clear first (prevents "ghost" workout on refresh)
+            try {
+              localStorage.removeItem(ACTIVE_SESSION_KEY);
+              window.dispatchEvent(new Event('storage'));
+            } catch (error) {
+              console.error('Error clearing localStorage:', error);
+            }
+
+            setActiveWorkout(null);
+
+            if (typeof onWorkoutComplete === 'function') {
+              onWorkoutComplete(workoutId, exerciseData, duration, workoutName, totalVolume);
+            }
+            // Refresh plans section after completing workout
+            if (onRefreshCompletedSessions) {
+              onRefreshCompletedSessions();
+            }
+          }}
+          onCancel={() => {
+            // Hard clear first (prevents "ghost" workout on refresh)
+            try {
+              localStorage.removeItem(ACTIVE_SESSION_KEY);
+              window.dispatchEvent(new Event('storage'));
+            } catch (error) {
+              console.error('Error clearing localStorage:', error);
+            }
+            setActiveWorkout(null);
+            if (onRefreshCompletedSessions) {
+              onRefreshCompletedSessions();
+            }
+          }}
+          language={language}
+          recoveredSession={recoveredSession}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="ui-center">
+    <div key="list" className="ui-center">
       <div className="home-content">
         {/* Logo */}
         <div className="flex justify-center mb-6">
@@ -499,9 +495,34 @@ const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recovered
                                     exercises: template.exercises || [],
                                   };
                                   try {
-                                    localStorage.setItem(CURRENT_WORKOUT_KEY, JSON.stringify(workoutToStart));
+                                    const exerciseSets = (workoutToStart.exercises || []).map((ex) => {
+                                      const targetSets = parseInt(ex.sets) || 1;
+                                      return {
+                                        name: ex.name,
+                                        targetSets,
+                                        targetReps: ex.reps,
+                                        targetWeight: ex.weight,
+                                        sets: Array.from({ length: targetSets }, (_, i) => ({
+                                          id: i,
+                                          completed: false,
+                                          reps: '',
+                                          weight: '',
+                                        })),
+                                      };
+                                    });
+
+                                    localStorage.setItem(
+                                      ACTIVE_SESSION_KEY,
+                                      JSON.stringify({
+                                        workoutName: workoutToStart.name,
+                                        exerciseSets,
+                                        currentExerciseIndex: 0,
+                                        currentSetIndex: 0,
+                                        workoutStartTime: Date.now(),
+                                      })
+                                    );
                                   } catch (error) {
-                                    console.error('Error saving current_workout:', error);
+                                    console.error('Error saving trackd_active_session:', error);
                                   }
                                   setActiveWorkout(workoutToStart);
                                 }}

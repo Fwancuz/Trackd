@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, startTransition } from 'react';
 import { supabase } from './supabaseClient';
 import Auth from './Auth';
 
@@ -15,7 +15,9 @@ const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        startTransition(() => {
+          setUser(session?.user || null);
+        });
       } catch (err) {
         setError(err.message);
         setUser(null);
@@ -29,7 +31,9 @@ const AuthProvider = ({ children }) => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setUser(session?.user || null);
+        startTransition(() => {
+          setUser(session?.user || null);
+        });
         setLoading(false);
       }
     );
@@ -42,7 +46,9 @@ const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await supabase.auth.signOut();
-      setUser(null);
+      startTransition(() => {
+        setUser(null);
+      });
     } catch (err) {
       setError(err.message);
     }

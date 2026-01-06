@@ -10,22 +10,10 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-.aurora-container {
-  width: 100%;
-  height: 100%;
-}
-
 .app-main {
-  background-color: #0a0a0b;
-  background-attachment: fixed;
   width: 100vw;
   height: 100vh;
   position: relative;
-}
-
-.aurora-bg {
-  position: absolute;
-  inset: 0;
 }
 
 .ui-center {
@@ -2235,7 +2223,7 @@ select.exercise-input option:hover {
   flex-direction: column;
   z-index: 100;
   overflow-y: auto;
-  padding-bottom: 100px;
+  padding-bottom: 1rem;
 }
 
 .workout-player-header {
@@ -2255,6 +2243,7 @@ select.exercise-input option:hover {
 .workout-info {
   flex: 1;
   text-align: left;
+  padding-right: 0.5rem;
 }
 
 .workout-info .app-title {
@@ -2267,32 +2256,32 @@ select.exercise-input option:hover {
 
 .workout-stats-row {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 0 1rem;
 }
 
 .stat-badge {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%);
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   border: 1px solid rgba(16, 185, 129, 0.25);
-  min-width: 100px;
   backdrop-filter: blur(8px);
 }
 
-.stat-label {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.75);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.stat-icon {
+  color: rgba(16, 185, 129, 0.8);
+  flex-shrink: 0;
 }
 
 .stat-value {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #10b981;
   font-family: 'Courier New', monospace;
@@ -2410,7 +2399,7 @@ select.exercise-input option:hover {
 .workout-player-content {
   flex: 1;
   padding: 1.5rem;
-  padding-bottom: calc(var(--hud-height) + 2rem + var(--safe-bottom));
+  padding-bottom: 1rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -2424,6 +2413,7 @@ select.exercise-input option:hover {
 
 .exercise-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1.5rem;
@@ -2433,7 +2423,8 @@ select.exercise-input option:hover {
 }
 
 .exercise-title-block {
-  flex: 1;
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
 .exercise-title-block h2 {
@@ -2443,6 +2434,9 @@ select.exercise-input option:hover {
   color: #ffffff;
   letter-spacing: 0.02em;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .exercise-progress-small {
@@ -2457,6 +2451,8 @@ select.exercise-input option:hover {
 .target-specs {
   display: flex;
   gap: 0.75rem;
+  flex: 0 0 auto;
+  align-items: center;
 }
 
 .spec-chip {
@@ -2656,18 +2652,18 @@ select.exercise-input option:hover {
 
 /* Add Set Button */
 .btn-add-set {
-  width: 100%;
+  width: fit-content;
+  margin: 0 auto 1.5rem auto;
   background: linear-gradient(135deg, rgba(136, 132, 216, 0.3) 0%, rgba(136, 132, 216, 0.2) 100%);
   color: #ffffff;
   border: 2px dashed rgba(136, 132, 216, 0.5);
-  padding: 1.25rem;
+  padding: 0.875rem 1.5rem;
   border-radius: 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-size: 1.05rem;
-  min-height: 52px;
-  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  min-height: 44px;
   touch-action: manipulation;
   backdrop-filter: blur(10px);
 }
@@ -2679,44 +2675,40 @@ select.exercise-input option:hover {
   box-shadow: 0 4px 15px rgba(136, 132, 216, 0.25);
 }
 
-/* Finish Workout Bar */
-.workout-finish-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+/* Finish Workout Bar - moved to bottom of content */
+.workout-finish-section {
+  width: 100%;
   background: linear-gradient(180deg, rgba(10, 10, 10, 0.98) 0%, rgba(0, 0, 0, 1) 100%);
-  padding: 1.5rem;
-  border-top: 3px solid rgba(34, 197, 94, 0.5);
+  padding: 1.5rem 0 2rem 0;
+  border-top: 2px solid rgba(34, 197, 94, 0.3);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  z-index: 101;
+  gap: 0.75rem;
+  margin-top: 2rem;
   backdrop-filter: blur(20px);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.workout-finish-bar .hold-button {
+.workout-finish-section .hold-button {
   width: 100%;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   border-radius: 0.75rem;
-  font-weight: 900;
-  font-size: 1.2rem;
+  font-weight: 800;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  min-height: 60px;
+  min-height: 50px;
   touch-action: manipulation;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
-  letter-spacing: 0.03em;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
-.workout-finish-bar .hold-button:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 28px rgba(16, 185, 129, 0.5);
+.workout-finish-section .hold-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
 }
 
 .btn-finish-workout {
@@ -3660,6 +3652,42 @@ select.exercise-input option:hover {
   .next-exercise-name {
     font-size: 1.1rem;
   }
+
+  /* Workout Player mobile optimizations */
+  .workout-info .app-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .workout-stats-row {
+    gap: 0.75rem;
+  }
+
+  .stat-badge {
+    padding: 0.4rem 0.6rem;
+  }
+
+  .exercise-title-block h2 {
+    font-size: 1.5rem;
+  }
+
+  .btn-add-set {
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+    min-height: 40px;
+    margin: 0 auto 1rem auto;
+  }
+
+  .workout-finish-section {
+    padding: 1rem 0 1.5rem 0;
+    margin-top: 1.5rem;
+  }
+
+  .workout-finish-section .hold-button {
+    padding: 0.875rem 1rem;
+    min-height: 45px;
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 360px) {
@@ -3692,5 +3720,28 @@ select.exercise-input option:hover {
 
   .hint-text {
     font-size: 0.65rem;
+  }
+}
+/* Landscape Orientation Guard */
+@media (orientation: landscape) and (max-height: 500px) {
+  body::before {
+    content: 'Please rotate your device back to portrait';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    z-index: 9999;
+    text-align: center;
+    padding: 2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
   }
 }

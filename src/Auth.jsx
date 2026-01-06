@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { supabase } from './supabaseClient';
-import Aurora from './Aurora';
 import appLogo from './assets/logonewtransparent.png';
 
 const Auth = () => {
@@ -61,15 +60,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="app-main">
-      <div className="aurora-bg">
-        <Aurora
-          colorStops={['#3A29FF', '#FF94B4', '#FF3232']}
-          blend={0.5}
-          amplitude={1.0}
-          speed={0.5}
-        />
+    <div key="auth-container" className="app-main relative overflow-hidden bg-slate-950">
+      {/* Deep Space background with static blur elements */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+        <div className="w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
       </div>
+
       <div className="ui-center">
         <div className="w-full max-w-sm p-8 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20">
           <div className="flex justify-center mb-8">
@@ -78,7 +75,7 @@ const Auth = () => {
 
           {isResetPassword ? (
             // Reset Password Form
-            <>
+            <div key="reset-password-form">
               <h2 className="text-xl font-semibold text-white mb-6 text-center">
                 Reset Password
               </h2>
@@ -128,10 +125,10 @@ const Auth = () => {
                   Back to Sign In
                 </button>
               </div>
-            </>
+            </div>
           ) : (
             // Login/SignUp Form
-            <>
+            <div key="login-signup-form">
               <form onSubmit={handleAuth} className="space-y-4">
                 <div>
                   <label className="block text-white/80 text-sm font-medium mb-2">
@@ -199,7 +196,7 @@ const Auth = () => {
                   {isSignUp ? 'Sign In' : 'Sign Up'}
                 </button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

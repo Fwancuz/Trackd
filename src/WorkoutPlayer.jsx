@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Check, Trash2 } from 'lucide-react';
+import { X, Check, Trash2, Clock, Dumbbell } from 'lucide-react';
 import translations from './translations';
 import ConfirmModal from './ConfirmModal';
 import HoldButton from './HoldButton';
@@ -10,11 +10,17 @@ import RestTimerOverlay from './RestTimerOverlay';
 
 // Session Recovery Storage Key
 const STORAGE_KEY = 'trackd_active_session';
-const CURRENT_WORKOUT_KEY = 'current_workout';
 
 const getNow = () => Date.now();
 
 const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recoveredSession = null }) => {
+  const isValidSessionData = (data) => {
+    const hasWorkoutName = typeof data?.workoutName === 'string' && data.workoutName.trim().length > 0;
+    const hasExerciseSets = Array.isArray(data?.exerciseSets) && data.exerciseSets.length > 0;
+    const hasSetsArrays = hasExerciseSets && data.exerciseSets.every((ex) => Array.isArray(ex?.sets));
+    return hasWorkoutName && hasExerciseSets && hasSetsArrays;
+  };
+
   // Initialize state with recovered session or new workout
   const initializeState = () => {
     if (recoveredSession) {
@@ -72,6 +78,11 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
   useEffect(() => {
     if (!stateInitializedRef.current) return;
 
+    // Don't persist if state is incomplete (prevents corrupting a valid saved session)
+    const hasValidExerciseSets = Array.isArray(exerciseSets) && exerciseSets.length > 0;
+    const hasSetsArrays = hasValidExerciseSets && exerciseSets.every((ex) => Array.isArray(ex?.sets));
+    if (!hasValidExerciseSets || !hasSetsArrays) return;
+
     const sessionData = {
       workoutName: initialState.workoutName,
       exerciseSets,
@@ -91,14 +102,41 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
   useEffect(() => {
     stateInitializedRef.current = true;
 
-    // Persist a minimal marker so Home can lazy-init and show resume instantly
+    // Lock device to portrait orientation
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('portrait').catch(err => {
+        console.log('Orientation lock not available or denied:', err);
+      });
+    }
+
+    // IMPORTANT: Never overwrite an existing session on mount.
+    // On mobile wake-up, localStorage can be briefly unavailable; we must not "replace" a real session with an empty one.
     try {
-      localStorage.setItem(
-        CURRENT_WORKOUT_KEY,
-        JSON.stringify({ name: initialState.workoutName, exercises: [] })
-      );
+      const existingRaw = localStorage.getItem(STORAGE_KEY);
+      if (existingRaw) {
+        const existing = JSON.parse(existingRaw);
+        if (isValidSessionData(existing)) return;
+      }
+    } catch {
+      // ignore
+    }
+
+    const initialSessionData = {
+      workoutName: initialState.workoutName,
+      exerciseSets: initialState.exerciseSets,
+      currentExerciseIndex: initialState.currentExerciseIndex,
+      currentSetIndex: initialState.currentSetIndex,
+      workoutStartTime,
+    };
+
+    // Only write if the initial state is valid (starting a brand new workout).
+    if (!isValidSessionData(initialSessionData)) return;
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialSessionData));
+      window.dispatchEvent(new Event('storage'));
     } catch (error) {
-      console.error('Error saving current_workout marker:', error);
+      console.error('Error saving trackd_active_session:', error);
     }
   }, []);
 
@@ -112,7 +150,11 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
     }
   }, [timer.timeLeft, restTimerActive]);
 
-  const currentExercise = exerciseSets[currentExerciseIndex];
+  const currentExercise = exerciseSets?.[currentExerciseIndex];
+
+  const hasValidExerciseSets = Array.isArray(exerciseSets) && exerciseSets.length > 0;
+  const hasValidCurrentExercise = !!currentExercise && Array.isArray(currentExercise.sets);
+  const isInvalidState = !hasValidExerciseSets || !hasValidCurrentExercise;
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -125,6 +167,10 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
   };
 
   const handleSetComplete = () => {
+    if (!currentExercise || !Array.isArray(currentExercise.sets)) {
+      handleCancelWorkout();
+      return;
+    }
     const updatedExercises = [...exerciseSets];
     updatedExercises[currentExerciseIndex].sets[currentSetIndex].completed = true;
 
@@ -183,8 +229,8 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
     
     // Clear session from localStorage (hard clear first)
     try {
-      localStorage.removeItem(CURRENT_WORKOUT_KEY);
       localStorage.removeItem(STORAGE_KEY);
+      window.dispatchEvent(new Event('storage'));
     } catch (error) {
       console.error('Error clearing session from localStorage:', error);
     }
@@ -224,8 +270,8 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
   const handleCancelWorkout = () => {
     // Clear session from localStorage (hard clear first)
     try {
-      localStorage.removeItem(CURRENT_WORKOUT_KEY);
       localStorage.removeItem(STORAGE_KEY);
+      window.dispatchEvent(new Event('storage'));
     } catch (error) {
       console.error('Error clearing session from localStorage:', error);
     }
@@ -242,8 +288,14 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
     onCancel();
   };
 
-  const totalCompletedSets = exerciseSets.reduce((acc, ex) => acc + ex.sets.filter((s) => s.completed).length, 0);
-  const totalSets = exerciseSets.reduce((acc, ex) => acc + ex.sets.length, 0);
+  const totalCompletedSets = (exerciseSets || []).reduce(
+    (acc, ex) => acc + (ex?.sets || []).filter((s) => s?.completed).length,
+    0
+  );
+  const totalSets = (exerciseSets || []).reduce((acc, ex) => acc + (ex?.sets || []).length, 0);
+
+  // Prevent white-screen crash when session is incomplete.
+  if (isInvalidState) return null;
 
   return (
     <>
@@ -254,11 +306,11 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
             <h1 className="app-title">{workout.name}</h1>
             <div className="workout-stats-row">
               <div className="stat-badge">
-                <span className="stat-label">{t.duration || 'Duration'}</span>
+                <Clock size={16} className="stat-icon" />
                 <span className="stat-value">{formatTime(workoutDuration)}</span>
               </div>
               <div className="stat-badge">
-                <span className="stat-label">{t.sets || 'Sets'}</span>
+                <Dumbbell size={16} className="stat-icon" />
                 <span className="stat-value">{totalCompletedSets}/{totalSets}</span>
               </div>
             </div>
@@ -273,7 +325,10 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
           timer={timer}
           isVisible={restTimerActive}
           onSkip={timer.skip}
-          nextExerciseName={exerciseSets[currentExerciseIndex + 1]?.name || (currentSetIndex + 1 < currentExercise.sets.length ? currentExercise.name : '')}
+          nextExerciseName={
+            exerciseSets[currentExerciseIndex + 1]?.name ||
+            (currentSetIndex + 1 < (currentExercise?.sets?.length || 0) ? currentExercise?.name : '')
+          }
           nextWeight={exerciseSets[currentExerciseIndex + 1]?.targetWeight || currentExercise?.targetWeight}
           nextReps={exerciseSets[currentExerciseIndex + 1]?.targetReps || currentExercise?.targetReps}
         />
@@ -377,19 +432,19 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
             <button className="btn-add-set" onClick={handleAddSet}>
               + {t.addSet || 'Add Set'}
             </button>
+
+            {/* Finish Button - at bottom of content */}
+            {totalCompletedSets > 0 && (
+              <div className="workout-finish-section">
+                <HoldButton 
+                  onComplete={finishWorkout}
+                  label={t.finishWorkout || 'Finish Workout'}
+                />
+                <span className="finish-note">{totalCompletedSets} {t.setsCompleted || 'sets completed'}</span>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Finish Button */}
-        {totalCompletedSets > 0 && (
-          <div className="workout-finish-bar">
-            <HoldButton 
-              onComplete={finishWorkout}
-              label={t.finishWorkout || 'Finish Workout'}
-            />
-            <span className="finish-note">{totalCompletedSets} {t.setsCompleted || 'sets completed'}</span>
-          </div>
-        )}
       </div>
 
       {/* Cancel Confirmation Modal */}

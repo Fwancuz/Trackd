@@ -15,6 +15,7 @@ export const useToast = () => {
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const timeoutRefsMap = useRef(new Map());
+  const mountedRef = useRef(false);
 
   const removeToast = (id) => {
     // Clear any pending timeout for this toast
@@ -23,21 +24,19 @@ export const ToastProvider = ({ children }) => {
       timeoutRefsMap.current.delete(id);
     }
 
-    // Use requestAnimationFrame to ensure React finishes current render cycle
-    requestAnimationFrame(() => {
-      setToasts(prev => {
-        // Double-check: only remove if toast actually exists
-        const exists = prev.some(t => t.id === id);
-        if (!exists) return prev;
-        return prev.filter(t => t.id !== id);
-      });
+    if (!mountedRef.current) return;
+    setToasts(prev => {
+      const exists = prev.some(t => t.id === id);
+      if (!exists) return prev;
+      return prev.filter(t => t.id !== id);
     });
   };
 
   const showToast = (message, type = 'success', duration = 3000) => {
     const id = Date.now() + Math.random();
     const toast = { id, message, type };
-    
+
+    if (!mountedRef.current) return id;
     setToasts(prev => [...prev, toast]);
     
     if (duration > 0) {
@@ -59,7 +58,9 @@ export const ToastProvider = ({ children }) => {
 
   // Cleanup function to clear all timeouts on unmount
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       timeoutRefsMap.current.forEach(timeoutId => clearTimeout(timeoutId));
       timeoutRefsMap.current.clear();
     };
