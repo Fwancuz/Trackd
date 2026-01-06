@@ -63,7 +63,51 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
     }
   }, [recoveredSession]);
 
+  // Sync with localStorage when app comes back to focus (handles phone wake-up)
+  useEffect(() => {
+    const STORAGE_KEY = 'trackd_active_session';
+    
+    const handleFocusOrVisibility = () => {
+      try {
+        const savedSession = localStorage.getItem(STORAGE_KEY);
+        
+        if (savedSession) {
+          // Active session exists in localStorage - restore it
+          const sessionData = JSON.parse(savedSession);
+          setActiveWorkout({
+            name: sessionData.workoutName,
+            exercises: [], // Exercises are already in recovered state
+          });
+          console.log('Synced active workout from localStorage on focus');
+        } else {
+          // No active session - ensure activeWorkout is null
+          // This prevents "ghost" workouts from persisting
+          if (activeWorkout) {
+            setActiveWorkout(null);
+            console.log('Cleared ghost workout - no session in localStorage');
+          }
+        }
+      } catch (error) {
+        console.error('Error syncing workout from localStorage:', error);
+        // If parsing fails, clear the corrupted data
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (removeError) {
+          console.error('Error removing corrupted session:', removeError);
+        }
+      }
+    };
 
+    // Listen for visibility changes (primary event for mobile wake-up)
+    document.addEventListener('visibilitychange', handleFocusOrVisibility);
+    // Listen for focus event as fallback for desktop browsers
+    window.addEventListener('focus', handleFocusOrVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleFocusOrVisibility);
+      window.removeEventListener('focus', handleFocusOrVisibility);
+    };
+  }, [activeWorkout]);
 
   /**
    * Handle create new template - navigate to create view
@@ -240,8 +284,23 @@ const Home = ({ savedWorkouts, completedSessions, onWorkoutComplete, language = 
           setTimeout(() => setShowCompletionMessage(false), 4000);
           onWorkoutComplete(activeWorkout.id, exerciseData, duration, workoutName, totalVolume);
           setActiveWorkout(null);
+          // Refresh plans section after completing workout
+          if (onRefreshCompletedSessions) {
+            onRefreshCompletedSessions();
+          }
         }}
-        onCancel={() => setActiveWorkout(null)}
+        onCancel={() => {
+          setActiveWorkout(null);
+          // Ensure localStorage is cleared and refresh stats when canceling
+          try {
+            localStorage.removeItem('trackd_active_session');
+          } catch (error) {
+            console.error('Error clearing localStorage:', error);
+          }
+          if (onRefreshCompletedSessions) {
+            onRefreshCompletedSessions();
+          }
+        }}
         language={language}
         recoveredSession={recoveredSession}
       />
