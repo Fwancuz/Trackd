@@ -3,16 +3,19 @@ import { Medal, Trophy, Zap, Target, History, Clock, Play, Pencil, MoreVertical,
 import WorkoutPlayer from './WorkoutPlayer';
 import ConfirmModal from './ConfirmModal';
 import RecentHistory from './RecentHistory';
+import PRStatsWidget from './PRStatsWidget';
+import ActivityHeatmap from './ActivityHeatmap';
 import MoreMenu from './MoreMenu';
 import translations from './translations';
 import { useToast } from './ToastContext';
+import { useTheme } from './ThemeContext';
 import { useWorkoutHistory } from './useWorkoutHistory';
 import { supabase } from './supabaseClient';
 import appLogo from './assets/logonewtransparent.png';
 
 const ACTIVE_SESSION_KEY = 'trackd_active_session';
 
-const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recoveredSession = null, userId = null, onRefreshCompletedSessions = null, onEditTemplate = null, onNavigateToCreate = null }) => {
+const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, language = 'en', recoveredSession = null, userId = null, onRefreshCompletedSessions = null, onEditTemplate = null, onNavigateToCreate = null }) => {
   const [activeWorkout, setActiveWorkout] = useState(() => {
     try {
       const savedSession = localStorage.getItem(ACTIVE_SESSION_KEY);
@@ -34,6 +37,7 @@ const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recovered
   const [lastCompletedVolume, setLastCompletedVolume] = useState(null);
   const [showCompletionMessage, setShowCompletionMessage] = useState(false);
   const [statsRefreshKey, setStatsRefreshKey] = useState(0);
+  const [heatmapRefreshKey, setHeatmapRefreshKey] = useState(0);
   const [templates, setTemplates] = useState([]);
   const [_loadingTemplates, setLoadingTemplates] = useState(false);
   const { success } = useToast();
@@ -246,15 +250,17 @@ const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recovered
   }, [completedSessions]);
 
   // Rank system with Lucide icons
+  const themeInfo = useTheme()?.themeInfo || {};
+
   const RankIcon = ({ tier }) => {
     const iconProps = { size: 20, strokeWidth: 1.5 };
     switch(tier) {
-      case 'bronze': return <Medal color="#cd7f32" {...iconProps} />;
-      case 'silver': return <Medal color="#c0c0c0" {...iconProps} />;
-      case 'gold': return <Medal color="#ffd700" {...iconProps} />;
-      case 'platinum': return <Trophy color="#e5e7eb" {...iconProps} />;
-      case 'diamond': return <Zap color="#7dd3fc" {...iconProps} />;
-      case 'titan': return <Zap color="#a78bfa" {...iconProps} />;
+      case 'bronze': return <Medal color={themeInfo.bronze || '#cd7f32'} {...iconProps} />;
+      case 'silver': return <Medal color={themeInfo.silver || '#c0c0c0'} {...iconProps} />;
+      case 'gold': return <Medal color={themeInfo.gold || '#ffd700'} {...iconProps} />;
+      case 'platinum': return <Trophy color={themeInfo.platinum || '#e5e7eb'} {...iconProps} />;
+      case 'diamond': return <Zap color={themeInfo.diamond || '#7dd3fc'} {...iconProps} />;
+      case 'titan': return <Zap color={themeInfo.titan || '#a78bfa'} {...iconProps} />;
       default: return null;
     }
   };
@@ -413,37 +419,115 @@ const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recovered
             onClick={() => setActiveTab('total')}
           >
             <Zap size={20} strokeWidth={1.5} />
-            <span className="tab-label">{language === 'pl' ? 'Razem Podniesione' : 'Total Lifted'}</span>
+            <span className="tab-label">{language === 'pl' ? 'Statystyki' : 'Stats'}</span>
           </button>
         </div>
 
         {activeTab === 'total' && (
-          <div className="total-lifted-section">
-            <div className="total-lifted-card" key={statsRefreshKey}>
-              <div className="total-lifted-value">
-                {(totalLifetimeVolume / 1000).toFixed(2)}
-              </div>
-              <div className="total-lifted-unit">
-                {language === 'pl' ? 'tony' : 'tons'}
-              </div>
-              <div className="total-lifted-subtitle">
-                {totalLifetimeVolume.toFixed(0)} kg
-              </div>
-            </div>
+          <div className="total-lifted-section" style={{ paddingBottom: '2rem' }}>
+            {/* Monthly Activity Heatmap */}
+            <ActivityHeatmap 
+              userId={userId} 
+              language={language}
+              refreshTrigger={heatmapRefreshKey}
+            />
 
-            <div className="stats-summary">
-              <div className="stat-box">
-                <div className="stat-value">{totalSessions}</div>
-                <div className="stat-label">
-                  {language === 'pl' ? 'Sesji' : 'Sessions'}
+            {/* PR Selector Widget */}
+            <PRStatsWidget personalRecords={personalRecords} language={language} />
+
+            {/* Volume Statistics */}
+            <div style={{
+              backgroundColor: 'var(--card)',
+              borderColor: 'var(--border)',
+              border: '1px solid',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              marginBottom: '1.5rem'
+            }}>
+              <h3 style={{ 
+                color: 'var(--text)', 
+                marginBottom: '1.5rem',
+                fontSize: '1rem',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                Volume Statistics
+              </h3>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '1rem',
+                marginBottom: '1rem'
+              }}>
+                {/* Widget 1: Total Volume (Large Card) */}
+                <div style={{
+                  gridColumn: 'span 2',
+                  backgroundColor: 'rgba(var(--accent), 0.05)',
+                  borderColor: 'var(--accent)',
+                  border: '1px solid',
+                  borderRadius: '0.5rem',
+                  padding: '1.5rem',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {language === 'pl' ? 'Całkowita Objętość' : 'Total Volume'}
+                  </div>
+                  <div style={{ 
+                    color: 'var(--accent)', 
+                    fontSize: '2.5rem', 
+                    fontWeight: '800',
+                    marginBottom: '0.25rem'
+                  }}>
+                    {(totalLifetimeVolume / 1000).toFixed(2)}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                    {language === 'pl' ? 'tony' : 'tons'} ({totalLifetimeVolume.toFixed(0)} kg)
+                  </div>
                 </div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-value">
-                  {totalSessions > 0 ? (totalLifetimeVolume / totalSessions).toFixed(0) : 0}
+
+                {/* Widget 2: Sessions Count */}
+                <div style={{
+                  backgroundColor: 'rgba(var(--accent), 0.05)',
+                  borderColor: 'var(--accent)',
+                  border: '1px solid',
+                  borderRadius: '0.5rem',
+                  padding: '1.25rem',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {language === 'pl' ? 'Sesji' : 'Sessions'}
+                  </div>
+                  <div style={{ 
+                    color: 'var(--accent)', 
+                    fontSize: '2rem', 
+                    fontWeight: '800'
+                  }}>
+                    {totalSessions}
+                  </div>
                 </div>
-                <div className="stat-label">
-                  {language === 'pl' ? 'Średnio kg' : 'Avg kg'}
+
+                {/* Widget 3: Average per Session */}
+                <div style={{
+                  backgroundColor: 'rgba(var(--accent), 0.05)',
+                  borderColor: 'var(--accent)',
+                  border: '1px solid',
+                  borderRadius: '0.5rem',
+                  padding: '1.25rem',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {language === 'pl' ? 'Średnia' : 'Avg/Session'}
+                  </div>
+                  <div style={{ 
+                    color: 'var(--accent)', 
+                    fontSize: '2rem', 
+                    fontWeight: '800'
+                  }}>
+                    {totalSessions > 0 ? (totalLifetimeVolume / totalSessions).toFixed(0) : 0}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.25rem' }}>kg</div>
                 </div>
               </div>
             </div>
@@ -547,6 +631,7 @@ const Home = ({ completedSessions, onWorkoutComplete, language = 'en', recovered
                 language={language}
                 onRefreshStats={() => {
                   setStatsRefreshKey(prev => prev + 1);
+                  setHeatmapRefreshKey(prev => prev + 1);
                   if (onRefreshCompletedSessions) {
                     onRefreshCompletedSessions();
                   }

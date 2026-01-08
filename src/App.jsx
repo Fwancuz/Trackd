@@ -7,6 +7,7 @@ import PR from './PR';
 import Verified from './Verified';
 import ResetPassword from './ResetPassword';
 import { ToastProvider } from './ToastContext';
+import ThemeProvider from './ThemeContext';
 import { useAuth } from './AuthProvider';
 import { supabase } from './supabaseClient';
 
@@ -366,7 +367,7 @@ const App = () => {
   // to avoid infinite loops. It's a stable function defined in component scope.
 
   const pages = {
-    home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} recoveredSession={recoveredSession} userId={user?.id} onRefreshCompletedSessions={fetchCompletedSessions} onEditTemplate={setEditingTemplate} onNavigateToCreate={() => setCurrentPage('create')} />,
+    home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} personalRecords={personalRecords} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} recoveredSession={recoveredSession} userId={user?.id} onRefreshCompletedSessions={fetchCompletedSessions} onEditTemplate={setEditingTemplate} onNavigateToCreate={() => setCurrentPage('create')} />,
     create: <CreateWorkout addWorkout={addWorkout} language={language} editingTemplate={editingTemplate} onEditComplete={() => setEditingTemplate(null)} />,
     records: <PR personalRecords={personalRecords} onAddPR={addPersonalRecord} onDeletePR={deletePersonalRecord} language={language} />,
     settings: <AppSettings settings={settings} updateSettings={updateSettings} logout={logout} onResetStats={handleResetStats} onFetchSessions={fetchCompletedSessions} language={language} />,
@@ -375,7 +376,7 @@ const App = () => {
   if (loading) {
     return (
       <div key="app-loading" className="app-main flex items-center justify-center" suppressHydrationWarning>
-        <div className="text-white text-center">
+        <div style={{ color: 'var(--text)' }} className="text-center">
           <div className="animate-spin mb-4">⚙️</div>
           <p>Loading your workouts...</p>
         </div>
@@ -403,34 +404,42 @@ const App = () => {
 
   return (
     <ToastProvider>
-      <div key="main-container" className="app-main relative overflow-hidden bg-slate-950 min-h-screen">
-        {/* Deep Space background with static blur elements */}
-        <div className="pointer-events-none fixed inset-0 -z-10">
-          <div className="w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
-          <div className="w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+      <ThemeProvider user={user}>
+        <div key="main-container" className="app-main relative overflow-hidden min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
+          {/* Deep Space background with dynamic blur elements */}
+          <div className="pointer-events-none fixed inset-0 -z-10">
+            <div style={{ 
+              backgroundColor: `var(--accent)/10`,
+              opacity: '0.3'
+            }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+            <div style={{ 
+              backgroundColor: `var(--accent)/10`,
+              opacity: '0.2'
+            }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+          </div>
+          <div key={`page-${currentPage}`}>
+            {pages[currentPage]}
+          </div>
+          <nav className="bottom-nav">
+            <div className="nav-item" onClick={() => setCurrentPage('home')}>
+              <span className="nav-icon"><VscHome size={18} /></span>
+              <span className="nav-label">Home</span>
+            </div>
+            <div className="nav-item" onClick={() => setCurrentPage('create')}>
+              <span className="nav-icon"><VscArchive size={18} /></span>
+              <span className="nav-label">Create</span>
+            </div>
+            <div className="nav-item" onClick={() => setCurrentPage('records')}>
+              <span className="nav-icon"><VscSymbolMisc size={18} /></span>
+              <span className="nav-label">Records</span>
+            </div>
+            <div className="nav-item" onClick={() => setCurrentPage('settings')}>
+              <span className="nav-icon"><VscSettingsGear size={18} /></span>
+              <span className="nav-label">Settings</span>
+            </div>
+          </nav>
         </div>
-        <div key={`page-${currentPage}`}>
-          {pages[currentPage]}
-        </div>
-        <nav className="bottom-nav">
-          <div className="nav-item" onClick={() => setCurrentPage('home')}>
-            <span className="nav-icon"><VscHome size={18} /></span>
-            <span className="nav-label">Home</span>
-          </div>
-          <div className="nav-item" onClick={() => setCurrentPage('create')}>
-            <span className="nav-icon"><VscArchive size={18} /></span>
-            <span className="nav-label">Create</span>
-          </div>
-          <div className="nav-item" onClick={() => setCurrentPage('records')}>
-            <span className="nav-icon"><VscSymbolMisc size={18} /></span>
-            <span className="nav-label">Records</span>
-          </div>
-          <div className="nav-item" onClick={() => setCurrentPage('settings')}>
-            <span className="nav-icon"><VscSettingsGear size={18} /></span>
-            <span className="nav-label">Settings</span>
-          </div>
-        </nav>
-      </div>
+      </ThemeProvider>
     </ToastProvider>
   )
 }

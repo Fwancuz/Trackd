@@ -4,16 +4,85 @@
 :root {
   --hud-height: 80px;
   --safe-bottom: max(1rem, env(safe-area-inset-bottom));
+  --radius: 0px;
+  
+  /* ==================== CLASSIC THEME (Default) ==================== */
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #ffffff;
+  --text-muted: #94a3b8;
+  --accent-rgb: 249, 115, 22;
+  --accent: rgb(var(--accent-rgb));
+  --border: #334155;
+  
+  /* ==================== STATUS COLORS (Universal) ==================== */
+  --success-rgb: 16, 185, 129;
+  --success: rgb(var(--success-rgb));
+  --success-light-rgb: 34, 197, 94;
+  --success-light: rgb(var(--success-light-rgb));
+  --danger-rgb: 239, 68, 68;
+  --danger: rgb(var(--danger-rgb));
+  --warning-rgb: 245, 158, 11;
+  --warning: rgb(var(--warning-rgb));
+  --info-rgb: 59, 130, 246;
+  --info: rgb(var(--info-rgb));
+  
+  /* ==================== UNIVERSAL COLORS ==================== */
+  --white: #ffffff;
+  --black: #000000;
+  
+  /* ==================== MEDAL COLORS (Status/Badges) ==================== */
+  --bronze-rgb: 205, 127, 50;
+  --bronze: rgb(var(--bronze-rgb));
+  --silver-rgb: 192, 192, 192;
+  --silver: rgb(var(--silver-rgb));
+  --gold-rgb: 255, 215, 0;
+  --gold: rgb(var(--gold-rgb));
+  --platinum: #e5e7eb;
+  --diamond: #7dd3fc;
+  --titan: #a78bfa;
+}
+
+/* ==================== PROFESSIONAL THEME ==================== */
+html.theme-professional,
+html.theme-professional body {
+  --bg: #000000;
+  --card: #0f0f0f;
+  --text: #ffffff;
+  --text-muted: #71717a;
+  --accent-rgb: 0, 229, 255;
+  --accent: rgb(var(--accent-rgb));
+  --border: #1f1f1f;
+}
+
+/* ==================== METAL THEME ==================== */
+html.theme-metal,
+html.theme-metal body {
+  --bg: #000000;
+  --card: #1a0505;
+  --text: #ffffff;
+  --text-muted: #991b1b;
+  --accent-rgb: 255, 0, 0;
+  --accent: rgb(var(--accent-rgb));
+  --border: #6b1818;
 }
 
 * {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
+h1, h2, h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .app-main {
   width: 100vw;
   height: 100vh;
   position: relative;
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .ui-center {
@@ -23,12 +92,13 @@
   align-items: center;
   justify-content: center;
   z-index: 10;
-  color: white;
+  color: var(--text);
   text-align: center;
   padding: 1rem;
   padding-bottom: calc(var(--hud-height) + 2rem + var(--safe-bottom));
   overflow-y: auto;
   overflow-x: hidden;
+  background-color: var(--bg);
 }
 
 .progress-content {
@@ -39,6 +109,7 @@
   padding: 1.5rem;
   padding-right: 0.5rem;
   padding-bottom: calc(var(--hud-height) + 2rem + var(--safe-bottom));
+  color: var(--text);
 }
 
 .progress-content::-webkit-scrollbar {
@@ -50,12 +121,13 @@
 }
 
 .progress-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--accent-color);
+  opacity: 0.4;
   border-radius: 3px;
 }
 
 .progress-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  opacity: 0.6;
 }
 
 .app-title {
@@ -69,6 +141,7 @@
   text-align: center;
   display: block;
   width: 100%;
+  color: var(--text);
 }
 
 .workout-selection {
@@ -94,25 +167,26 @@
 }
 
 .workout-btn {
-  background-color: #2563eb;
-  color: white;
+  background-color: var(--accent-color);
+  color: var(--bg);
   font-weight: 600;
   padding: 1rem 2rem;
   border-radius: 0.75rem;
-  border: none;
+  border: 2px solid var(--accent-color);
   cursor: pointer;
   font-size: 1rem;
   min-height: 48px;
   touch-action: manipulation;
-  transition: background-color 0.2s ease, transform 0.15s cubic-bezier(0.4, 0, 0.6, 1);
+  transition: all 0.2s ease;
 }
 
 .workout-btn:hover {
-  background-color: #1d4ed8;
+  opacity: 0.85;
+  transform: translateY(-2px);
 }
 
 .workout-btn:active {
-  background-color: #1e40af;
+  opacity: 0.7;
   transform: scale(0.95);
 }
 
@@ -139,19 +213,26 @@
 }
 
 .create-workout::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--border);
 }
 
 .workout-input {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   font-size: 1rem;
   touch-action: manipulation;
+  transition: all 0.3s ease;
+}
+
+.workout-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent)/10;
 }
 
 .exercises {
@@ -164,24 +245,24 @@
   gap: 0.75rem;
   margin-bottom: 1.25rem;
   padding: 1.25rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(135deg, var(--card) 0%, var(--accent)/5 100%);
   border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border);
   transition: all 0.3s ease;
 }
 
 .exercise-row:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 100%);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, var(--card) 0%, var(--accent)/8 100%);
+  border-color: var(--accent);
 }
 
 .exercise-input {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--border);
   border-radius: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.05);
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   font-size: 1rem;
   transition: all 0.3s ease;
   backdrop-filter: blur(5px);
@@ -189,13 +270,13 @@
 
 .exercise-input:focus {
   outline: none;
-  border-color: rgba(37, 99, 235, 0.6);
-  background-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--accent);
+  background-color: var(--card);
+  box-shadow: 0 0 0 3px var(--accent)/10;
 }
 
 .exercise-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 
 .exercise-input.small {
@@ -213,14 +294,14 @@ select.exercise-input {
 }
 
 select.exercise-input option {
-  background-color: #1a1a1a;
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   padding: 0.75rem;
 }
 
 select.exercise-input option:hover {
-  background: linear-gradient(#2563eb, #2563eb);
-  background-color: #2563eb;
+  background: linear-gradient(var(--accent), var(--accent));
+  background-color: var(--accent);
 }
 
 .exercise-select-wrapper {
@@ -231,10 +312,10 @@ select.exercise-input option:hover {
 .exercise-select-trigger {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--border);
   border-radius: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.05);
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   font-size: 1rem;
   transition: all 0.3s ease;
   backdrop-filter: blur(5px);
@@ -246,7 +327,7 @@ select.exercise-input option:hover {
 }
 
 .exercise-select-trigger:hover {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--border);
   background-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -257,7 +338,7 @@ select.exercise-input option:hover {
 }
 
 .exercise-select-trigger .placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 
 .exercise-select-trigger .selected {
@@ -271,7 +352,7 @@ select.exercise-input option:hover {
   justify-content: center;
   width: 1.25rem;
   height: 1.25rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
   transition: transform 0.3s ease;
   flex-shrink: 0;
 }
@@ -326,7 +407,7 @@ select.exercise-input option:hover {
 }
 
 .exercise-search::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
 
 .exercise-search:focus {
@@ -358,19 +439,19 @@ select.exercise-input option:hover {
 }
 
 .exercise-option:hover {
-  background-color: rgba(37, 99, 235, 0.2);
-  border-left-color: rgba(37, 99, 235, 0.6);
+  background-color: var(--accent)/20;
+  border-left-color: var(--accent)/60;
 }
 
 .exercise-option.selected {
-  background-color: rgba(37, 99, 235, 0.3);
-  border-left-color: #2563eb;
-  color: #fff;
+  background-color: rgba(var(--accent), 0.3);
+  border-left-color: var(--accent);
+  color: var(--text);
   font-weight: 600;
 }
 
 .exercise-option.disabled {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   cursor: not-allowed;
   padding: 1rem;
   text-align: center;
@@ -390,16 +471,16 @@ select.exercise-input option:hover {
 }
 
 .exercise-options::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--border);
 }
 
 .btn {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   font-weight: 600;
   padding: 0.875rem 1.75rem;
   border-radius: 0.75rem;
-  border: 1px solid rgba(136, 132, 216, 0.4);
+  border: 1px solid var(--border);
   cursor: pointer;
   margin: 0.5rem 0;
   font-size: 1rem;
@@ -410,13 +491,49 @@ select.exercise-input option:hover {
 }
 
 .btn:hover {
-  background-color: rgba(136, 132, 216, 0.15);
-  border-color: rgba(136, 132, 216, 0.6);
-  box-shadow: 0 0 15px rgba(136, 132, 216, 0.2);
+  background: linear-gradient(135deg, var(--accent)/20 0%, var(--card) 100%);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent)/20;
 }
 
 .btn:active {
-  background-color: rgba(136, 132, 216, 0.2);
+  background-color: var(--accent)/30;
+  transform: scale(0.98);
+}
+
+/* Hold Button Styles */
+.hold-button {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hold-button-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: var(--accent);
+  opacity: 0.4;
+  transition: width 0.05s linear;
+  z-index: 1;
+}
+
+.hold-button span {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hold-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hold-button:active {
   transform: scale(0.98);
 }
 
@@ -463,16 +580,17 @@ select.exercise-input option:hover {
   max-width: 400px;
   width: 100%;
   padding-bottom: calc(var(--hud-height) + 4rem + var(--safe-bottom));
+  color: var(--text);
 }
 
 .danger-zone {
-  background: linear-gradient(135deg, rgba(255, 100, 100, 0.08) 0%, rgba(255, 100, 100, 0.05) 100%);
-  border: 1px solid rgba(255, 100, 100, 0.2);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--card) 100%);
+  border: 2px solid var(--accent);
   border-radius: 0.75rem;
   padding: 1.5rem;
   margin-top: 2rem;
   margin-bottom: 3rem;
-  border-top: 2px solid rgba(255, 100, 100, 0.3);
+  opacity: 0.9;
 }
 
 .color-options {
@@ -507,10 +625,10 @@ select.exercise-input option:hover {
 
 .language-btn {
   padding: 0.875rem 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--border);
   border-radius: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.05);
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   cursor: pointer;
   font-weight: 500;
   font-size: 0.95rem;
@@ -520,16 +638,17 @@ select.exercise-input option:hover {
 }
 
 .language-btn:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent);
+  background-color: var(--accent)/20;
+  color: var(--text);
 }
 
 .language-btn.active {
-  border-color: rgba(37, 99, 235, 0.6);
-  background-color: rgba(37, 99, 235, 0.2);
-  color: #fff;
+  border-color: var(--accent);
+  background-color: var(--accent);
+  color: var(--bg);
   font-weight: 600;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px var(--accent)/20;
 }
 
 .language-btn:active {
@@ -608,11 +727,11 @@ select.exercise-input option:hover {
 }
 
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--accent)/20;
 }
 
 .nav-item:active {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--accent)/30;
   transform: scale(0.95);
 }
 
@@ -639,16 +758,16 @@ select.exercise-input option:hover {
 }
 
 .workout-card {
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   transition: all 0.3s ease;
 }
 
 .workout-card:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(var(--accent), 0.03);
+  border-color: var(--accent);
 }
 
 .workout-card-header {
@@ -670,7 +789,7 @@ select.exercise-input option:hover {
   padding: 0.25rem 0.75rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text);
 }
 
 .workout-card-exercises {
@@ -689,21 +808,22 @@ select.exercise-input option:hover {
 }
 
 .exercise-specs {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
 .btn.primary {
   width: 100%;
-  background-color: #10b981;
+  background-color: var(--accent);
+  color: var(--bg);
 }
 
 .btn.primary:hover {
-  background-color: #059669;
+  opacity: 0.9;
 }
 
 .btn.primary:active {
-  background-color: #047857;
+  opacity: 0.8;
 }
 
 .workout-player {
@@ -735,9 +855,9 @@ select.exercise-input option:hover {
 }
 
 .cancel-btn {
-  background: rgba(239, 68, 68, 0.2);
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: rgba(var(--danger-rgb), 0.2);
+  border: 2px solid rgba(var(--danger-rgb), 0.3);
+  color: var(--danger);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -750,19 +870,19 @@ select.exercise-input option:hover {
 }
 
 .cancel-btn:hover {
-  background: rgba(239, 68, 68, 0.3);
+  background: rgba(var(--danger-rgb), 0.3);
   transform: scale(1.1);
 }
 
 .exercise-progress {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   margin-bottom: 1rem;
 }
 
 .current-exercise {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 2rem;
   max-width: 500px;
@@ -790,7 +910,7 @@ select.exercise-input option:hover {
 
 .info-item label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
 }
 
 .info-item p {
@@ -820,7 +940,7 @@ select.exercise-input option:hover {
 .timer-display {
   font-size: 3rem;
   font-weight: bold;
-  color: #10b981;
+  color: var(--success);
   margin-bottom: 1rem;
   font-family: 'Courier New', monospace;
 }
@@ -853,7 +973,7 @@ select.exercise-input option:hover {
 .input-group label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-muted);
 }
 
 .input-group .exercise-input {
@@ -888,9 +1008,9 @@ select.exercise-input option:hover {
 }
 
 .tab-btn {
-  background-color: rgba(136, 132, 216, 0.2);
-  color: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(136, 132, 216, 0.4);
+  background-color: var(--accent)/20;
+  color: var(--text)/70;
+  border: 1px solid var(--accent)/40;
   padding: 0.5rem 1.25rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -901,16 +1021,16 @@ select.exercise-input option:hover {
 }
 
 .tab-btn:hover {
-  background-color: rgba(136, 132, 216, 0.3);
-  border-color: rgba(136, 132, 216, 0.6);
-  color: white;
+  background-color: var(--accent)/30;
+  border-color: var(--accent)/60;
+  color: var(--text);
 }
 
 .tab-btn.active {
-  background-color: rgba(136, 132, 216, 0.8);
-  border-color: rgba(136, 132, 216, 1);
-  color: white;
-  box-shadow: 0 0 15px rgba(136, 132, 216, 0.5);
+  background-color: var(--accent)/80;
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: 0 0 15px var(--accent)/50;
 }
 
 .history-body {
@@ -939,8 +1059,8 @@ select.exercise-input option:hover {
 }
 
 .session-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--accent)/8;
+  border-color: var(--accent)/30;
   transform: translateY(-2px);
 }
 
@@ -961,8 +1081,8 @@ select.exercise-input option:hover {
 
 .exercise-count {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(136, 132, 216, 0.2);
+  color: var(--text-muted);
+  background: var(--accent)/20;
   padding: 0.25rem 0.75rem;
   border-radius: 0.375rem;
 }
@@ -982,7 +1102,7 @@ select.exercise-input option:hover {
   align-items: center;
   font-size: 0.875rem;
   padding: 0.5rem 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text);
 }
 
 .ex-name {
@@ -991,7 +1111,7 @@ select.exercise-input option:hover {
 }
 
 .ex-stats {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 0.8rem;
   margin-left: 0.5rem;
 }
@@ -1004,7 +1124,7 @@ select.exercise-input option:hover {
 
 .empty-state {
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   padding: 2rem;
   font-size: 1rem;
 }
@@ -1019,7 +1139,7 @@ select.exercise-input option:hover {
 
 .picker-label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
   margin: 0 0 1rem 0;
   font-weight: 600;
   text-align: center;
@@ -1034,7 +1154,7 @@ select.exercise-input option:hover {
 
 .picker-btn {
   background-color: rgba(100, 150, 200, 0.2);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
   border: 1px solid rgba(100, 150, 200, 0.4);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -1047,16 +1167,16 @@ select.exercise-input option:hover {
 }
 
 .picker-btn:hover {
-  background-color: rgba(100, 150, 200, 0.4);
-  border-color: rgba(100, 150, 200, 0.8);
-  color: white;
+  background-color: var(--accent)/20;
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 .picker-btn.active {
-  background-color: rgba(136, 132, 216, 0.8);
-  border-color: rgba(136, 132, 216, 1);
-  color: white;
-  box-shadow: 0 0 15px rgba(136, 132, 216, 0.5);
+  background-color: var(--accent)/80;
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: 0 0 15px var(--accent)/50;
 }
 
 .charts-container {
@@ -1088,7 +1208,7 @@ select.exercise-input option:hover {
 .chart-item h4 {
   font-size: 0.95rem;
   margin: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -1168,21 +1288,21 @@ select.exercise-input option:hover {
 
 .graph-label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
   margin: 0.5rem 0;
 }
 
 .session-date {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   margin: 0 0 0.5rem 0;
 }
 
 /* Remove Exercise Button */
 .remove-exercise-btn {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(var(--danger-rgb), 0.15);
+  color: rgba(var(--danger-rgb), 0.7);
+  border: 1px solid rgba(var(--danger-rgb), 0.4);
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -1198,10 +1318,10 @@ select.exercise-input option:hover {
 }
 
 .remove-exercise-btn:hover {
-  background: rgba(239, 68, 68, 0.25);
-  color: #ff6b6b;
-  border-color: rgba(239, 68, 68, 0.6);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+  background: rgba(var(--danger-rgb), 0.25);
+  color: rgba(var(--danger-rgb), 0.85);
+  border-color: rgba(var(--danger-rgb), 0.6);
+  box-shadow: 0 0 12px rgba(var(--danger-rgb), 0.3);
 }
 
 .remove-exercise-btn:active {
@@ -1276,7 +1396,7 @@ select.exercise-input option:hover {
 }
 
 .home-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--border);
 }
 
 /* Home Stats Banner */
@@ -1301,12 +1421,12 @@ select.exercise-input option:hover {
 .stat-number {
   font-size: 2rem;
   font-weight: 700;
-  color: #3b82f6;
+  color: var(--info);
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
 }
 
 /* Empty State */
@@ -1369,8 +1489,8 @@ select.exercise-input option:hover {
 }
 
 .completion-badge {
-  background-color: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  background-color: rgba(var(--info-rgb), 0.2);
+  color: var(--info);
   padding: 0.25rem 0.75rem;
   border-radius: 1rem;
   font-size: 0.75rem;
@@ -1385,7 +1505,7 @@ select.exercise-input option:hover {
 
 .exercise-count {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   background-color: rgba(255, 255, 255, 0.05);
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
@@ -1436,7 +1556,7 @@ select.exercise-input option:hover {
 
 .exercise-specs {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -1482,8 +1602,8 @@ select.exercise-input option:hover {
 }
 
 .template-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 0.875rem;
   padding: 1rem 0.875rem;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1498,16 +1618,16 @@ select.exercise-input option:hover {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+  background: linear-gradient(135deg, rgba(var(--accent), 0.1) 0%, transparent 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
 .template-card:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+  background-color: rgba(var(--accent), 0.03);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   transform: translateY(-4px);
 }
 
@@ -1520,7 +1640,7 @@ select.exercise-input option:hover {
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 0.75rem;
 }
 
@@ -1543,7 +1663,7 @@ select.exercise-input option:hover {
   border-radius: 0.375rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
@@ -1580,8 +1700,8 @@ select.exercise-input option:hover {
 
 .btn.template-start-btn {
   flex: 1;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  background-color: var(--accent);
+  color: var(--bg);
   border: none;
   padding: 0.6rem 0.875rem;
   border-radius: 0.625rem;
@@ -1597,8 +1717,8 @@ select.exercise-input option:hover {
 }
 
 .btn.template-start-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transform: translateY(-2px);
 }
 
@@ -1627,15 +1747,15 @@ select.exercise-input option:hover {
 
 .empty-templates-message {
   font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
   margin: 0;
   max-width: 300px;
   line-height: 1.5;
 }
 
 .btn.create-template-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  background-color: var(--accent);
+  color: var(--bg);
   border: none;
   padding: 0.875rem 1.75rem;
   border-radius: 0.75rem;
@@ -1650,8 +1770,8 @@ select.exercise-input option:hover {
 }
 
 .btn.create-template-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+  opacity: 0.9;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   transform: translateY(-2px);
 }
 
@@ -1724,13 +1844,13 @@ select.exercise-input option:hover {
 }
 
 .exercise-select-btn.completed {
-  border-color: rgba(59, 130, 246, 0.6);
-  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(var(--info-rgb), 0.6);
+  background-color: rgba(var(--info-rgb), 0.1);
 }
 
 .exercise-count-badge {
-  background-color: #3b82f6;
-  color: white;
+  background-color: var(--info);
+  color: var(--white);
   padding: 0.25rem 0.5rem;
   border-radius: 1rem;
   font-size: 0.75rem;
@@ -1767,7 +1887,7 @@ select.exercise-input option:hover {
 
 .exercise-graph-card.no-data p {
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
   text-align: center;
 }
 
@@ -1801,7 +1921,7 @@ select.exercise-input option:hover {
   gap: 1rem;
   padding: 1.25rem 1.75rem;
   border-radius: 0.75rem;
-  color: white;
+  color: var(--white);
   font-weight: 500;
   font-size: 1rem;
   backdrop-filter: blur(10px);
@@ -1809,18 +1929,18 @@ select.exercise-input option:hover {
 }
 
 .toast-notification.toast-success .toast-content {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, var(--success) 0%, rgba(var(--success-rgb), 0.7) 100%);
+  box-shadow: 0 8px 32px rgba(var(--success-rgb), 0.3);
 }
 
 .toast-notification.toast-error .toast-content {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, var(--danger) 0%, rgba(var(--danger-rgb), 0.7) 100%);
+  box-shadow: 0 8px 32px rgba(var(--danger-rgb), 0.3);
 }
 
 .toast-notification.toast-info .toast-content {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, var(--info) 0%, rgba(var(--info-rgb), 0.7) 100%);
+  box-shadow: 0 8px 32px rgba(var(--info-rgb), 0.3);
 }
 
 .toast-icon {
@@ -1876,7 +1996,7 @@ select.exercise-input option:hover {
 }
 
 .modal-container {
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  background-color: var(--card);
   border-radius: 1rem;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   max-width: 90vw;
@@ -1884,7 +2004,7 @@ select.exercise-input option:hover {
   max-height: 80vh;
   overflow-y: auto;
   animation: scaleIn 0.2s ease-out;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
 }
 
 .modal-header {
@@ -1892,21 +2012,21 @@ select.exercise-input option:hover {
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border);
   gap: 1rem;
 }
 
 .modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: white;
+  color: var(--text);
   flex: 1;
 }
 
 .modal-close {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -1919,13 +2039,13 @@ select.exercise-input option:hover {
 }
 
 .modal-close:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: var(--accent)/20;
+  color: var(--text);
 }
 
 .modal-body {
   padding: 1.5rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text);
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -1938,7 +2058,7 @@ select.exercise-input option:hover {
   display: flex;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border);
   justify-content: flex-end;
 }
 
@@ -1953,32 +2073,35 @@ select.exercise-input option:hover {
 }
 
 .modal-btn-cancel {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
+  background-color: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .modal-btn-cancel:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background-color: var(--accent)/20;
+  color: var(--text);
+  border-color: var(--accent);
 }
 
 .modal-btn-confirm {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  background-color: var(--success);
+  color: var(--white);
 }
 
 .modal-btn-confirm:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px var(--accent)/30;
 }
 
 .modal-btn-danger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  background-color: var(--danger) !important;
+  color: var(--white) !important;
 }
 
 .modal-btn-danger:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+  box-shadow: 0 4px 12px var(--danger)/30 !important;
 }
 
 /* Recent History Styles */
@@ -1991,7 +2114,7 @@ select.exercise-input option:hover {
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
-  color: white;
+  color: var(--text);
   text-align: left;
   padding: 0 1rem;
 }
@@ -2020,12 +2143,12 @@ select.exercise-input option:hover {
 }
 
 .history-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--border);
 }
 
 .history-item {
-  background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(17, 24, 39, 0.8) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1rem;
   display: flex;
@@ -2039,8 +2162,8 @@ select.exercise-input option:hover {
 }
 
 .history-item:hover {
-  background: linear-gradient(135deg, rgba(31, 41, 55, 1) 0%, rgba(17, 24, 39, 1) 100%);
-  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(var(--accent), 0.03);
+  border-color: var(--accent);
   transform: translateY(-2px);
 }
 
@@ -2073,7 +2196,7 @@ select.exercise-input option:hover {
 .history-delete-btn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 0.5rem;
@@ -2087,8 +2210,8 @@ select.exercise-input option:hover {
 }
 
 .history-delete-btn:hover {
-  background-color: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background-color: rgba(var(--danger-rgb), 0.2);
+  color: var(--danger);
 }
 
 .history-delete-btn:active {
@@ -2104,7 +2227,7 @@ select.exercise-input option:hover {
 }
 
 .history-date {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -2121,7 +2244,7 @@ select.exercise-input option:hover {
 
 .history-duration {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   margin-top: 0.25rem;
 }
 
@@ -2131,7 +2254,7 @@ select.exercise-input option:hover {
   top: 50%;
   transform: translateY(-50%);
   background: rgba(0, 0, 0, 0.8);
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.75rem;
@@ -2148,7 +2271,7 @@ select.exercise-input option:hover {
 .history-empty-state {
   text-align: center;
   padding: 2rem 1rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 
 .history-empty-state p {
@@ -2159,7 +2282,7 @@ select.exercise-input option:hover {
 .history-footer {
   padding: 1.5rem 1rem 1rem 1rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -2218,7 +2341,7 @@ select.exercise-input option:hover {
 .workout-player {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+  background-color: var(--bg);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -2230,9 +2353,9 @@ select.exercise-input option:hover {
   position: sticky;
   top: 0;
   z-index: 101;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  background-color: var(--card);
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -2250,7 +2373,7 @@ select.exercise-input option:hover {
   margin: 0 0 1rem 0;
   font-size: 1.75rem;
   font-weight: 900;
-  color: #ffffff;
+  color: var(--text);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -2268,30 +2391,30 @@ select.exercise-input option:hover {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%);
+  background: linear-gradient(135deg, var(--accent)/15 0%, var(--accent)/8 100%);
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  border: 1px solid var(--accent)/25;
   backdrop-filter: blur(8px);
 }
 
 .stat-icon {
-  color: rgba(16, 185, 129, 0.8);
+  color: var(--accent)/80;
   flex-shrink: 0;
 }
 
 .stat-value {
   font-size: 1rem;
   font-weight: 800;
-  color: #10b981;
+  color: var(--accent);
   font-family: 'Courier New', monospace;
   letter-spacing: 0.05em;
 }
 
 .cancel-btn {
-  background: rgba(239, 68, 68, 0.15);
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: rgba(var(--danger-rgb), 0.15);
+  border: 2px solid rgba(var(--danger-rgb), 0.3);
+  color: var(--danger);
   width: 40px;
   height: 40px;
   border-radius: 0.5rem;
@@ -2305,8 +2428,8 @@ select.exercise-input option:hover {
 }
 
 .cancel-btn:hover {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(var(--danger-rgb), 0.25);
+  border-color: rgba(var(--danger-rgb), 0.5);
   transform: scale(1.05);
 }
 
@@ -2315,8 +2438,8 @@ select.exercise-input option:hover {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
-  border-bottom: 2px solid rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, var(--accent)/20 0%, var(--accent)/10 100%);
+  border-bottom: 2px solid var(--accent)/40;
   padding: 1rem 1.5rem;
   display: flex;
   justify-content: space-between;
@@ -2335,7 +2458,7 @@ select.exercise-input option:hover {
 
 .timer-label {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -2344,13 +2467,13 @@ select.exercise-input option:hover {
 .timer-display {
   font-size: 2.75rem;
   font-weight: 900;
-  color: #22c55e;
+  color: var(--success-light);
   font-family: 'Courier New', monospace;
   letter-spacing: 2px;
 }
 
 .timer-display.warning {
-  color: #f59e0b;
+  color: var(--warning);
   animation: pulse 1s ease-in-out infinite;
 }
 
@@ -2387,7 +2510,7 @@ select.exercise-input option:hover {
 
 .timer-btn-small:hover {
   background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--border);
   transform: translateY(-2px);
 }
 
@@ -2431,7 +2554,7 @@ select.exercise-input option:hover {
   margin: 0 0 0.5rem 0;
   font-size: 1.75rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text);
   letter-spacing: 0.02em;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   word-wrap: break-word;
@@ -2442,7 +2565,7 @@ select.exercise-input option:hover {
 .exercise-progress-small {
   display: inline-block;
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   background: rgba(37, 99, 235, 0.2);
   padding: 0.375rem 0.75rem;
   border-radius: 0.375rem;
@@ -2459,10 +2582,10 @@ select.exercise-input option:hover {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  background: linear-gradient(135deg, rgba(136, 132, 216, 0.3) 0%, rgba(136, 132, 216, 0.1) 100%);
+  background: linear-gradient(135deg, var(--accent)/30 0%, var(--accent)/10 100%);
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid rgba(136, 132, 216, 0.3);
+  border: 1px solid var(--accent)/30;
   text-align: center;
   min-width: 70px;
 }
@@ -2475,7 +2598,7 @@ select.exercise-input option:hover {
 
 .spec-chip small {
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -2490,9 +2613,9 @@ select.exercise-input option:hover {
 }
 
 .set-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  background-color: var(--card);
   backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.75rem;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -2500,15 +2623,15 @@ select.exercise-input option:hover {
 }
 
 .set-card.current {
-  background: linear-gradient(135deg, rgba(217, 119, 6, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%);
-  border: 2px solid rgba(217, 119, 6, 0.6);
-  box-shadow: 0 0 20px rgba(217, 119, 6, 0.35), inset 0 0 15px rgba(217, 119, 6, 0.1);
+  background: linear-gradient(135deg, var(--accent)/20 0%, var(--accent)/10 100%);
+  border: 2px solid var(--accent)/60;
+  box-shadow: 0 0 20px var(--accent)/35, inset 0 0 15px var(--accent)/10;
   backdrop-filter: blur(20px);
 }
 
 .set-card.completed {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
-  border-color: rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, var(--accent)/10 0%, var(--accent)/5 100%);
+  border-color: var(--accent)/40;
   opacity: 0.75;
   backdrop-filter: blur(20px);
 }
@@ -2519,7 +2642,7 @@ select.exercise-input option:hover {
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
 .set-header-actions {
@@ -2531,7 +2654,7 @@ select.exercise-input option:hover {
 .set-number {
   font-weight: 800;
   font-size: 1.1rem;
-  color: #ffffff;
+  color: var(--text);
   letter-spacing: 0.02em;
 }
 
@@ -2541,9 +2664,9 @@ select.exercise-input option:hover {
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background-color: var(--success);
   border-radius: 50%;
-  color: white;
+  color: var(--white);
 }
 
 .set-inputs {
@@ -2570,10 +2693,10 @@ select.exercise-input option:hover {
 .set-input {
   width: 100%;
   padding: 0.875rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: var(--card);
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
-  color: #ffffff;
+  color: var(--text);
   font-size: 1.05rem;
   font-weight: 700;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -2583,20 +2706,20 @@ select.exercise-input option:hover {
 
 .set-input:focus {
   outline: none;
-  background: rgba(0, 0, 0, 0.5);
-  border-color: rgba(217, 119, 6, 0.8);
-  box-shadow: 0 0 15px rgba(217, 119, 6, 0.35), inset 0 0 8px rgba(217, 119, 6, 0.15);
+  background: var(--card);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent)/35, inset 0 0 8px var(--accent)/15;
 }
 
 .set-input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: rgba(255, 255, 255, 0.02);
-  color: rgba(255, 255, 255, 0.5);
+  background: var(--card);
+  color: var(--text-muted);
 }
 
 .set-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -2607,8 +2730,8 @@ select.exercise-input option:hover {
 
 .btn-set-complete {
   flex: 1;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  background-color: var(--accent);
+  color: var(--bg);
   border: none;
   padding: 1rem 1.25rem;
   border-radius: 0.5rem;
@@ -2618,12 +2741,12 @@ select.exercise-input option:hover {
   font-size: 1rem;
   min-height: 52px;
   touch-action: manipulation;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .btn-set-complete:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 }
 
 .btn-set-complete:active {
@@ -2631,9 +2754,9 @@ select.exercise-input option:hover {
 }
 
 .btn-set-remove {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 2px solid rgba(239, 68, 68, 0.4);
+  background: var(--accent)/15;
+  color: var(--accent);
+  border: 2px solid var(--accent)/40;
   padding: 0.875rem 1.25rem;
   border-radius: 0.5rem;
   font-weight: 700;
@@ -2645,8 +2768,8 @@ select.exercise-input option:hover {
 }
 
 .btn-set-remove:hover {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.6);
+  background: var(--accent)/25;
+  border-color: var(--accent)/60;
   transform: translateY(-2px);
 }
 
@@ -2654,9 +2777,9 @@ select.exercise-input option:hover {
 .btn-add-set {
   width: fit-content;
   margin: 0 auto 1.5rem auto;
-  background: linear-gradient(135deg, rgba(136, 132, 216, 0.3) 0%, rgba(136, 132, 216, 0.2) 100%);
-  color: #ffffff;
-  border: 2px dashed rgba(136, 132, 216, 0.5);
+  background: linear-gradient(135deg, var(--accent)/30 0%, var(--accent)/20 100%);
+  color: var(--text);
+  border: 2px dashed var(--accent)/50;
   padding: 0.875rem 1.5rem;
   border-radius: 0.75rem;
   font-weight: 700;
@@ -2669,10 +2792,10 @@ select.exercise-input option:hover {
 }
 
 .btn-add-set:hover {
-  background: linear-gradient(135deg, rgba(136, 132, 216, 0.45) 0%, rgba(136, 132, 216, 0.35) 100%);
-  border-color: rgba(136, 132, 216, 0.7);
+  background: linear-gradient(135deg, var(--accent)/45 0%, var(--accent)/35 100%);
+  border-color: var(--accent)/70;
   transform: translateY(-3px);
-  box-shadow: 0 4px 15px rgba(136, 132, 216, 0.25);
+  box-shadow: 0 4px 15px var(--accent)/25;
 }
 
 /* Finish Workout Bar - moved to bottom of content */
@@ -2680,7 +2803,7 @@ select.exercise-input option:hover {
   width: 100%;
   background: transparent;
   padding: 1.5rem 0 2rem 0;
-  border-top: 1px solid rgba(34, 197, 94, 0.2);
+  border-top: 1px solid var(--accent)/20;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -2689,31 +2812,31 @@ select.exercise-input option:hover {
 
 .workout-finish-section .hold-button {
   width: 100%;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  background: var(--accent);
+  color: var(--bg);
   border: none;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
-  font-weight: 800;
+  font-weight: bold;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   min-height: 50px;
   touch-action: manipulation;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 4px 15px var(--accent)/30;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
 .workout-finish-section .hold-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 6px 20px var(--accent)/30;
 }
 
 .btn-finish-workout {
   width: 100%;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
+  background-color: var(--accent);
+  color: var(--bg);
   border: none;
   padding: 1.25rem 1.5rem;
   border-radius: 0.75rem;
@@ -2723,14 +2846,14 @@ select.exercise-input option:hover {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   min-height: 60px;
   touch-action: manipulation;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
 .btn-finish-workout:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 28px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
 }
 
 .btn-finish-workout:active {
@@ -2740,7 +2863,7 @@ select.exercise-input option:hover {
 .finish-note {
   text-align: center;
   font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -2917,8 +3040,8 @@ select.exercise-input option:hover {
 
 .boss-bar-content {
   backdrop-filter: blur(12px);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 1rem;
   padding: 1.5rem;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
@@ -3025,9 +3148,9 @@ select.exercise-input option:hover {
 
 .boss-bar-progress {
   height: 100%;
-  background: linear-gradient(90deg, #00d4ff 0%, #7c3aed 50%, #ec4899 100%);
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 50%, var(--accent) 100%);
   border-radius: 6px;
-  box-shadow: 0 0 15px rgba(123, 58, 237, 0.6);
+  box-shadow: 0 0 15px var(--accent)/60;
   width: 0%;
 }
 
@@ -3041,17 +3164,14 @@ select.exercise-input option:hover {
   font-size: 1.75rem;
   font-weight: 800;
   letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent);
 }
 
 .volume-unit {
   font-size: 0.9rem;
   font-weight: 600;
   opacity: 0.85;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.85);
+  color: var(--text);
 }
 
 /* ============================================
@@ -3076,7 +3196,7 @@ select.exercise-input option:hover {
   background: rgba(255, 255, 255, 0.08);
   border: 2px solid rgba(255, 255, 255, 0.15);
   border-radius: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -3086,7 +3206,7 @@ select.exercise-input option:hover {
 
 .tab-button:hover {
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--border);
   color: white;
   transform: translateY(-2px);
 }
@@ -3227,10 +3347,10 @@ select.exercise-input option:hover {
 .exercise-selector {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(20, 20, 22, 0.8);
-  border: 1px solid #3f3f46;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
-  color: #ffffff;
+  color: var(--text);
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 0.95rem;
   font-weight: 500;
@@ -3245,19 +3365,19 @@ select.exercise-input option:hover {
 }
 
 .exercise-selector:hover {
-  border-color: #52525b;
-  background-color: rgba(20, 20, 22, 0.95);
+  border-color: var(--border);
+  background-color: var(--card);
 }
 
 .exercise-selector:focus {
   outline: none;
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 
 .exercise-selector option {
-  background: #141416;
-  color: #ffffff;
+  background: var(--card);
+  color: var(--text);
   padding: 0.5rem;
 }
 
@@ -3409,7 +3529,7 @@ select.exercise-input option:hover {
 
 .next-exercise-label {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   font-weight: 600;
@@ -3429,7 +3549,7 @@ select.exercise-input option:hover {
   gap: 0.5rem;
   justify-content: center;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
 }
 
 /* Timer circle wrapper - centered and only interactive element */
@@ -3480,29 +3600,29 @@ select.exercise-input option:hover {
 }
 
 .timer-display-center.dimmed {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .timer-number {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 4.5rem;
   font-weight: 900;
-  color: #22c55e;
+  color: var(--success-light);
   line-height: 1;
   letter-spacing: -2px;
   transition: color 0.3s ease;
 }
 
 .timer-display-center.dimmed .timer-number {
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .timer-number.low-time {
-  color: #f59e0b;
+  color: var(--warning);
 }
 
 .timer-display-center.dimmed .timer-number.low-time {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 /* Paused label */
@@ -3510,7 +3630,7 @@ select.exercise-input option:hover {
   position: absolute;
   top: -4rem;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 600;
@@ -3538,7 +3658,7 @@ select.exercise-input option:hover {
 
 .hint-text {
   font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 500;
@@ -3600,14 +3720,14 @@ select.exercise-input option:hover {
 
 .pr-record-date {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--text-muted);
   margin-top: 0.25rem;
 }
 
 .pr-delete-btn {
   padding: 0.5rem 0.75rem;
-  background-color: #d32f2f;
-  color: #fff;
+  background-color: var(--danger);
+  color: var(--white);
   border: none;
   border-radius: 0.35rem;
   cursor: pointer;
@@ -3617,12 +3737,12 @@ select.exercise-input option:hover {
 }
 
 .pr-delete-btn:hover {
-  background-color: #b71c1c;
+  background-color: rgba(var(--danger-rgb), 0.9);
 }
 
 .pr-records-title {
   margin-bottom: 1rem;
-  color: #888;
+  color: var(--text-muted);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -3690,6 +3810,52 @@ select.exercise-input option:hover {
   }
 }
 
+/* Theme Selector Styles */
+.app-settings {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.settings-content h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.language-options {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.language-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: var(--card);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.language-btn:hover {
+  background-color: var(--accent)/20;
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.language-btn.active {
+  background-color: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
 @media (max-width: 360px) {
   .rest-timer-content-container {
     padding: 1.5rem 0.75rem;
@@ -3744,4 +3910,37 @@ select.exercise-input option:hover {
     font-weight: 600;
     letter-spacing: 0.5px;
   }
+}
+
+/* ==================== UNIVERSAL THEME STYLES ==================== */
+/* Ensure all text inherits theme color */
+body, html, #root {
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Style all buttons to use theme colors */
+button {
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+/* Style all inputs to use theme */
+input, textarea, select {
+  background-color: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+  transition: all 0.2s ease;
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgba(var(--text), 0.5);
+}
+
+/* Style all cards to use theme */
+.card, [class*="card"], [class*="Card"] {
+  background-color: var(--card);
+  border-color: var(--border);
+  color: var(--text);
 }

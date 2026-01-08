@@ -70,30 +70,25 @@ const HoldButton = ({
       onMouseLeave={handleMouseUp}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className={`hold-button ${isHolding ? 'holding' : ''} ${disabled ? 'disabled' : ''} ${className}`}
+      className={`hold-button relative overflow-hidden ${isHolding ? 'holding' : ''} ${disabled ? 'disabled' : ''} ${className}`}
       disabled={disabled}
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-      }}
     >
-      {/* Progress fill background */}
+      {/* Progress overlay - bg-black/25 overlaid on var(--accent) */}
       <div
-        className="hold-button-progress"
         style={{
           position: 'absolute',
-          left: 0,
           top: 0,
-          height: '100%',
+          left: 0,
+          bottom: 0,
           width: `${progress}%`,
-          backgroundColor: 'rgba(34, 197, 94, 0.6)',
-          transition: 'width 0.05s linear',
-          zIndex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.25)',
+          zIndex: 10,
+          transition: 'width 0.075s linear',
         }}
       />
       
-      {/* Button content */}
-      <span style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      {/* Button content - on top */}
+      <span style={{ position: 'relative', zIndex: 20, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         {label || children}
       </span>
 
@@ -106,7 +101,7 @@ const HoldButton = ({
             left: '50%',
             transform: 'translateX(-50%)',
             fontSize: '0.75rem',
-            color: '#22c55e',
+            color: 'var(--accent)',
             fontWeight: '600',
             whiteSpace: 'nowrap',
             animation: 'slideUp 0.3s ease-out',

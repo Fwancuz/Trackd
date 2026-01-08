@@ -79,7 +79,7 @@ if (typeof document !== 'undefined') {
     .more-menu-trigger {
       background: none;
       border: none;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--text-muted);
       cursor: pointer;
       padding: 0.5rem;
       display: flex;
@@ -93,8 +93,8 @@ if (typeof document !== 'undefined') {
     }
 
     .more-menu-trigger:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: white;
+      background-color: var(--border);
+      color: var(--text);
     }
 
     .more-menu-trigger:active {
@@ -106,9 +106,9 @@ if (typeof document !== 'undefined') {
       right: 0;
       top: 100%;
       margin-top: 0.5rem;
-      background: rgba(20, 20, 22, 0.95);
+      background: var(--card);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border);
       border-radius: 0.75rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       overflow: hidden;
@@ -133,7 +133,7 @@ if (typeof document !== 'undefined') {
       padding: 0.875rem 1rem;
       background: none;
       border: none;
-      color: rgba(255, 255, 255, 0.8);
+      color: var(--text-muted);
       text-align: left;
       cursor: pointer;
       display: flex;
@@ -141,7 +141,7 @@ if (typeof document !== 'undefined') {
       gap: 0.75rem;
       font-size: 0.95rem;
       transition: all 0.2s ease;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--border);
     }
 
     .more-menu-item:last-child {
@@ -149,8 +149,8 @@ if (typeof document !== 'undefined') {
     }
 
     .more-menu-item:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: white;
+      background-color: var(--border);
+      color: var(--text);
     }
 
     .more-menu-item:active {
@@ -158,11 +158,12 @@ if (typeof document !== 'undefined') {
     }
 
     .more-menu-item-danger {
-      color: #ef4444;
+      color: var(--accent);
     }
 
     .more-menu-item-danger:hover {
-      background-color: rgba(239, 68, 68, 0.2);
+      background-color: var(--accent);
+      color: white;
     }
 
     .more-menu-icon {

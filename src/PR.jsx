@@ -83,7 +83,7 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--text)',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -143,7 +143,7 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--text)',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -166,7 +166,7 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
             </button>
           </div>
 
-          <div style={{ marginTop: '24px', color: '#888', textAlign: 'center', fontSize: '0.9rem' }}>
+          <div style={{ marginTop: '24px', color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.9rem' }}>
             {exercisesWithPRs.length} {exercisesWithPRs.length === 1 ? t.exercise || 'exercise' : t.exercises || 'exercises'} tracked
           </div>
         </div>
@@ -186,7 +186,7 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
           
           <form onSubmit={handleAddPR} style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ color: '#aaa', fontSize: '0.9rem' }}>{t.selectExercise}</label>
+              <label style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t.selectExercise}</label>
               <ExerciseSelect
                 value={formData.exercise}
                 onChange={(exercise) => setFormData({ ...formData, exercise })}
@@ -197,7 +197,7 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ color: '#aaa', fontSize: '0.9rem' }}>{t.weight} (kg)</label>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t.weight} (kg)</label>
                 <input
                   type="number"
                   step="0.5"
@@ -207,16 +207,16 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                   style={{
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
-                    border: '1px solid #444',
-                    backgroundColor: '#1a1a1a',
-                    color: '#fff',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--card)',
+                    color: 'var(--text)',
                     fontSize: '1rem'
                   }}
                 />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ color: '#aaa', fontSize: '0.9rem' }}>{t.reps}</label>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t.reps}</label>
                 <input
                   type="number"
                   value={formData.reps}
@@ -225,9 +225,9 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                   style={{
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
-                    border: '1px solid #444',
-                    backgroundColor: '#1a1a1a',
-                    color: '#fff',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--card)',
+                    color: 'var(--text)',
                     fontSize: '1rem'
                   }}
                 />
@@ -244,7 +244,7 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--text)',
                 fontWeight: '600',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -380,19 +380,19 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
               <div style={{
                 marginTop: '2rem',
                 padding: '2rem',
-                border: '3px solid #d4af37',
+                border: '3px solid var(--gold)',
                 borderRadius: '0.75rem',
-                backgroundColor: 'rgba(212, 175, 55, 0.08)',
+                backgroundColor: 'rgba(var(--gold-rgb), 0.08)',
                 textAlign: 'center',
-                boxShadow: '0 0 20px rgba(212, 175, 55, 0.2)'
+                boxShadow: '0 0 20px rgba(var(--gold-rgb), 0.2)'
               }}>
-                <div style={{ fontSize: '0.9rem', color: '#d4af37', fontWeight: '600', marginBottom: '1rem', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--gold)', fontWeight: '600', marginBottom: '1rem', letterSpacing: '0.05em' }}>
                   PERSONAL BEST
                 </div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#fff', marginBottom: '0.5rem', letterSpacing: '0.02em' }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text)', marginBottom: '0.5rem', letterSpacing: '0.02em' }}>
                   {personalBest.weight} kg × {personalBest.reps}
                 </div>
-                <div style={{ fontSize: '0.95rem', color: '#aaa', marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
                   Est. 1RM: {personalBest.estimated1RM.toFixed(1)} kg
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#888' }}>
@@ -406,31 +406,31 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                 <h3 style={{ marginBottom: '1rem', color: '#888' }}>Strength Progress (Estimated 1RM)</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={graphData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis 
                       dataKey="date"
                       tickFormatter={formatDate}
-                      stroke="#888"
-                      tick={{ fontSize: 10 }}
+                      stroke="var(--text-muted)"
+                      tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
                     />
                     <YAxis 
-                      stroke="#888"
+                      stroke="var(--text-muted)"
                       domain={[Math.floor(min1RM * 0.9), Math.ceil(max1RM * 1.05)]}
-                      tick={{ fontSize: 10 }}
-                      label={{ value: 'kg', angle: -90, position: 'insideLeft', offset: 10 }}
+                      tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+                      label={{ value: 'kg', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--text-muted)' }}
                     />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #666', borderRadius: '4px' }}
-                      labelStyle={{ color: '#fff' }}
+                      contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '4px' }}
+                      labelStyle={{ color: 'var(--text)' }}
                       labelFormatter={(label) => formatFullDate(label)}
                       formatter={(value, name, props) => {
                         const estimated1RM = props.payload.estimated1RM;
                         const weight = props.payload.weight;
                         const reps = props.payload.reps;
                         return [
-                          <div key="tooltip" style={{ color: '#fff' }}>
+                          <div key="tooltip" style={{ color: 'var(--text)' }}>
                             <div>Estimated 1RM: {estimated1RM.toFixed(1)} kg</div>
-                            <div style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '0.25rem' }}>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                               Based on: {weight} kg x {reps} reps
                             </div>
                           </div>,
@@ -442,9 +442,9 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
                     <Line
                       type="monotone"
                       dataKey="estimated1RM"
-                      stroke="#3A29FF"
+                      stroke="var(--accent)"
                       strokeWidth={3}
-                      dot={{ fill: '#3A29FF', r: 5 }}
+                      dot={{ fill: 'var(--accent)', r: 5 }}
                       activeDot={{ r: 7 }}
                       name="Estimated 1RM (kg)"
                       isAnimationActive={true}
@@ -455,8 +455,8 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
             )}
 
             {records?.length === 1 && (
-              <div style={{ marginTop: '2rem', padding: '2rem', backgroundColor: '#222', borderRadius: '0.5rem', textAlign: 'center' }}>
-                <p style={{ color: '#888' }}>
+              <div style={{ marginTop: '2rem', padding: '2rem', backgroundColor: 'var(--card)', borderRadius: '0.5rem', textAlign: 'center' }}>
+                <p style={{ color: 'var(--text-muted)' }}>
                   {t.addNewPR || 'Add another record to see progress'}
                 </p>
               </div>

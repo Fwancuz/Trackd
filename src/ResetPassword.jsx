@@ -65,22 +65,32 @@ const ResetPassword = () => {
 
   if (!isValidSession) {
     return (
-      <div key="reset-invalid-container" className="relative w-full h-screen overflow-hidden bg-slate-950">
+      <div key="reset-invalid-container" className="relative w-full h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg)' }}>
         <div className="pointer-events-none fixed inset-0 -z-10">
-          <div className="w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
-          <div className="w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+          <div style={{ 
+            backgroundColor: `var(--accent)/10`,
+            opacity: '0.3'
+          }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+          <div style={{ 
+            backgroundColor: `var(--accent)/10`,
+            opacity: '0.2'
+          }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
         </div>
         <div className="relative z-10 flex items-center justify-center w-full h-full px-4">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-4 drop-shadow-lg">
+            <h2 style={{ color: 'var(--text)' }} className="text-2xl font-bold mb-4 drop-shadow-lg">
               Invalid or Expired Link
             </h2>
-            <p className="text-gray-200 drop-shadow-md mb-6">
+            <p style={{ color: 'var(--text)' }} className="drop-shadow-md mb-6 opacity-80">
               Please request a new password reset link
             </p>
             <a
               href="/"
-              className="inline-block px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:opacity-90 transition"
+              style={{
+                backgroundColor: 'var(--accent)',
+                color: 'var(--text)'
+              }}
+              className="inline-block px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition"
             >
               Back to Login
             </a>
@@ -91,60 +101,76 @@ const ResetPassword = () => {
   }
 
   return (
-    <div key="reset-valid-container" className="relative w-full h-screen overflow-hidden bg-slate-950">
+    <div key="reset-valid-container" className="relative w-full h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
-        <div className="w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+        <div style={{ 
+          backgroundColor: `var(--accent)/10`,
+          opacity: '0.3'
+        }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+        <div style={{ 
+          backgroundColor: `var(--accent)/10`,
+          opacity: '0.2'
+        }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
       </div>
 
       {/* Content Container */}
       <div className="relative z-10 flex items-center justify-center w-full h-full px-4">
-        <div className="w-full max-w-md p-8 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20">
+        <div style={{
+          backgroundColor: `var(--card)/80`,
+          borderColor: 'var(--border)'
+        }} className="w-full max-w-md p-8 rounded-3xl backdrop-blur-3xl border">
           {success ? (
             // Success Message
             <div className="text-center">
               <div className="flex justify-center mb-6">
-                <div className="p-4 bg-green-500/20 rounded-full backdrop-blur-sm">
+                <div style={{
+                  backgroundColor: `var(--accent)/20`,
+                  borderColor: 'var(--accent)'
+                }} className="p-4 rounded-full backdrop-blur-sm border">
                   <FiCheckCircle 
                     size={48} 
-                    className="text-green-400 drop-shadow-lg"
+                    style={{ color: 'var(--accent)' }}
+                    className="drop-shadow-lg"
                     strokeWidth={1.5}
                   />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-4 drop-shadow-lg">
+              <h2 style={{ color: 'var(--text)' }} className="text-2xl font-bold mb-4 drop-shadow-lg">
                 Password Updated!
               </h2>
-              <p className="text-gray-200 drop-shadow-md mb-6">
+              <p style={{ color: 'var(--text)' }} className="drop-shadow-md mb-6 opacity-80">
                 Your password has been successfully changed. You will be redirected to login shortly.
               </p>
               <div className="animate-pulse">
-                <p className="text-sm text-gray-300">Redirecting in 3 seconds...</p>
+                <p style={{ color: 'var(--text)' }} className="text-sm opacity-60">Redirecting in 3 seconds...</p>
               </div>
             </div>
           ) : (
             // Reset Password Form
             <>
               <div className="flex justify-center mb-6">
-                <div className="p-3 bg-blue-500/20 rounded-full">
+                <div style={{
+                  backgroundColor: `var(--accent)/20`,
+                  borderColor: 'var(--accent)'
+                }} className="p-3 rounded-full border">
                   <FiLock 
                     size={32} 
-                    className="text-blue-400"
+                    style={{ color: 'var(--accent)' }}
                     strokeWidth={1.5}
                   />
                 </div>
               </div>
 
-              <h1 className="text-2xl font-bold text-white mb-2 text-center">
+              <h1 style={{ color: 'var(--text)' }} className="text-2xl font-bold mb-2 text-center">
                 Reset Password
               </h1>
-              <p className="text-gray-300 text-sm text-center mb-6">
+              <p style={{ color: 'var(--text)' }} className="text-sm text-center mb-6 opacity-80">
                 Enter your new password below
               </p>
 
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div>
-                  <label className="block text-white/80 text-sm font-medium mb-2">
+                  <label style={{ color: 'var(--text)' }} className="block text-sm font-medium mb-2 opacity-80">
                     New Password / Nowe Hasło
                   </label>
                   <input
@@ -152,13 +178,18 @@ const ResetPassword = () => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition"
+                    style={{
+                      backgroundColor: 'var(--card)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text)'
+                    }}
+                    className="w-full px-4 py-2 rounded-lg border focus:outline-none transition"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-white/80 text-sm font-medium mb-2">
+                  <label style={{ color: 'var(--text)' }} className="block text-sm font-medium mb-2 opacity-80">
                     Confirm Password / Potwierdź Hasło
                   </label>
                   <input
@@ -166,13 +197,22 @@ const ResetPassword = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition"
+                    style={{
+                      backgroundColor: 'var(--card)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text)'
+                    }}
+                    className="w-full px-4 py-2 rounded-lg border focus:outline-none transition"
                     required
                   />
                 </div>
 
                 {error && (
-                  <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-200 text-sm">
+                  <div style={{
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderColor: 'var(--accent)',
+                    color: 'var(--text)'
+                  }} className="p-3 rounded-lg border text-sm">
                     {error}
                   </div>
                 )}
@@ -180,7 +220,11 @@ const ResetPassword = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:opacity-90 disabled:opacity-50 transition"
+                  style={{
+                    backgroundColor: 'var(--accent)',
+                    color: 'var(--text)'
+                  }}
+                  className="w-full px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition"
                 >
                   {loading ? 'Updating...' : 'Update Password / Zmień Hasło'}
                 </button>
@@ -189,7 +233,8 @@ const ResetPassword = () => {
               <div className="mt-6 text-center">
                 <a
                   href="/"
-                  className="text-blue-300 hover:text-blue-200 text-sm font-medium transition"
+                  style={{ color: 'var(--accent)' }}
+                  className="hover:opacity-80 text-sm font-medium transition"
                 >
                   Back to Sign In
                 </a>

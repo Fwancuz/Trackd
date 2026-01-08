@@ -3,10 +3,16 @@ import { FiCheckCircle } from 'react-icons/fi';
 
 const Verified = () => {
   return (
-    <div key="verified-container" className="relative w-full h-screen overflow-hidden bg-slate-950">
+    <div key="verified-container" className="relative w-full h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
-        <div className="w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+        <div style={{ 
+          backgroundColor: `var(--accent)/10`,
+          opacity: '0.3'
+        }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+        <div style={{ 
+          backgroundColor: `var(--accent)/10`,
+          opacity: '0.2'
+        }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
       </div>
 
       {/* Content Container */}
@@ -14,22 +20,26 @@ const Verified = () => {
         <div className="text-center max-w-md">
           {/* Success Icon */}
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-green-500/20 rounded-full backdrop-blur-sm">
+            <div style={{
+              backgroundColor: `var(--accent)/20`,
+              borderColor: 'var(--accent)'
+            }} className="p-4 rounded-full backdrop-blur-sm border">
               <FiCheckCircle 
                 size={64} 
-                className="text-green-400 drop-shadow-lg"
+                style={{ color: 'var(--accent)' }}
+                className="drop-shadow-lg"
                 strokeWidth={1.5}
               />
             </div>
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
+          <h1 style={{ color: 'var(--text)' }} className="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg">
             E-mail zweryfikowany pomyślnie
           </h1>
 
           {/* Subtext */}
-          <p className="text-lg md:text-xl text-gray-100 drop-shadow-md leading-relaxed">
+          <p style={{ color: 'var(--text)' }} className="text-lg md:text-xl drop-shadow-md leading-relaxed opacity-80">
             Twoje konto jest już aktywne. Możesz teraz zamknąć to okno i wrócić do aplikacji.
           </p>
         </div>

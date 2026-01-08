@@ -57,7 +57,7 @@ const AuthProvider = ({ children }) => {
   if (loading) {
     return (
       <div className="app-main flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div style={{ color: 'var(--text)' }}>Loading...</div>
       </div>
     );
   }

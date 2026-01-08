@@ -128,7 +128,7 @@ const RestTimerOverlay = ({
               cy="50"
               r="45"
               fill="none"
-              stroke="rgba(255, 255, 255, 0.1)"
+              stroke="var(--border)"
               strokeWidth="3"
               className={timer.isPaused ? 'dimmed' : ''}
             />
@@ -138,7 +138,7 @@ const RestTimerOverlay = ({
               cy="50"
               r="45"
               fill="none"
-              stroke={timer.isPaused ? '#6b7280' : (isLowTime ? '#f59e0b' : '#22c55e')}
+              stroke={timer.isPaused ? 'var(--text-muted)' : (isLowTime ? 'var(--accent)' : 'var(--accent)')}
               strokeWidth="3"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
@@ -146,7 +146,7 @@ const RestTimerOverlay = ({
               style={{ transform: 'rotate(-90deg)', transformOrigin: '50px 50px' }}
               animate={{
                 strokeDashoffset: strokeDashoffset,
-                stroke: timer.isPaused ? '#6b7280' : (isLowTime ? '#f59e0b' : '#22c55e'),
+                stroke: timer.isPaused ? 'var(--text-muted)' : (isLowTime ? 'var(--accent)' : 'var(--accent)'),
               }}
               transition={{ duration: 0.3 }}
             />
@@ -157,7 +157,7 @@ const RestTimerOverlay = ({
                 cy="50"
                 r="45"
                 fill="none"
-                stroke="#ff6b6b"
+                stroke="var(--accent)"
                 strokeWidth="2"
                 opacity={Math.max(0.2, holdProgress / 100)}
                 style={{ transform: 'rotate(-90deg)', transformOrigin: '50px 50px' }}
@@ -192,7 +192,7 @@ const RestTimerOverlay = ({
               <MotionDiv
                 className="hold-fill"
                 style={{
-                  background: `conic-gradient(#ff6b6b ${holdProgress * 3.6}deg, transparent ${holdProgress * 3.6}deg)`,
+                  background: `conic-gradient(var(--accent) ${holdProgress * 3.6}deg, transparent ${holdProgress * 3.6}deg)`,
                 }}
               />
             )}

@@ -108,32 +108,32 @@ const WorkoutHistory = ({ completedSessions, language = 'en' }) => {
                   <h4>{t.weightProgress}</h4>
                   <ResponsiveContainer width="100%" height={280}>
                     <LineChart data={chartData} margin={{ top: 5, right: 15, left: -20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis 
                         dataKey="date" 
-                        stroke="rgba(255,255,255,0.5)"
-                        tick={{ fontSize: 12 }}
+                        stroke="var(--text-muted)"
+                        tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
                       />
                       <YAxis 
-                        stroke="rgba(255,255,255,0.5)"
-                        tick={{ fontSize: 12 }}
+                        stroke="var(--text-muted)"
+                        tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
                         width={30}
                       />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'rgba(0,0,0,0.9)', 
-                          border: '1px solid rgba(255,100,0,0.5)',
+                          backgroundColor: 'var(--card)', 
+                          border: '1px solid var(--border)',
                           borderRadius: '8px'
                         }}
-                        labelStyle={{ color: '#fff' }}
+                        labelStyle={{ color: 'var(--text)' }}
                       />
                       <Legend wrapperStyle={{ paddingTop: '10px' }} />
                       <Line 
                         type="monotone" 
                         dataKey="weight" 
-                        stroke="#ff6400"
+                        stroke="var(--accent)"
                         strokeWidth={3}
-                        dot={{ fill: '#ff6400', r: 5 }}
+                        dot={{ fill: 'var(--accent)', r: 5 }}
                         activeDot={{ r: 7 }}
                         name="Weight (kg)"
                       />
@@ -145,32 +145,32 @@ const WorkoutHistory = ({ completedSessions, language = 'en' }) => {
                   <h4>{t.repsProgress}</h4>
                   <ResponsiveContainer width="100%" height={280}>
                     <LineChart data={chartData} margin={{ top: 5, right: 15, left: -20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis 
                         dataKey="date" 
-                        stroke="rgba(255,255,255,0.5)"
-                        tick={{ fontSize: 12 }}
+                        stroke="var(--text-muted)"
+                        tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
                       />
                       <YAxis 
-                        stroke="rgba(255,255,255,0.5)"
-                        tick={{ fontSize: 12 }}
+                        stroke="var(--text-muted)"
+                        tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
                         width={30}
                       />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'rgba(0,0,0,0.9)', 
-                          border: '1px solid rgba(136,132,216,0.5)',
+                          backgroundColor: 'var(--card)', 
+                          border: '1px solid var(--border)',
                           borderRadius: '8px'
                         }}
-                        labelStyle={{ color: '#fff' }}
+                        labelStyle={{ color: 'var(--text)' }}
                       />
                       <Legend wrapperStyle={{ paddingTop: '10px' }} />
                       <Line 
                         type="monotone" 
                         dataKey="reps" 
-                        stroke="#8884d8"
+                        stroke="var(--accent)"
                         strokeWidth={3}
-                        dot={{ fill: '#8884d8', r: 5 }}
+                        dot={{ fill: 'var(--accent)', r: 5 }}
                         activeDot={{ r: 7 }}
                         name="Reps"
                       />

@@ -60,15 +60,24 @@ const Auth = () => {
   };
 
   return (
-    <div key="auth-container" className="app-main relative overflow-hidden bg-slate-950">
-      {/* Deep Space background with static blur elements */}
+    <div key="auth-container" className="app-main relative overflow-hidden">
+      {/* Dynamic background with theme accent colors */}
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
-        <div className="w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+        <div style={{ 
+          backgroundColor: `var(--accent)/10`,
+          opacity: '0.3'
+        }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+        <div style={{ 
+          backgroundColor: `var(--accent)/10`,
+          opacity: '0.2'
+        }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
       </div>
 
       <div className="ui-center">
-        <div className="w-full max-w-sm p-8 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20">
+        <div style={{ 
+          backgroundColor: `var(--card)/80`,
+          borderColor: 'var(--border)'
+        }} className="w-full max-w-sm p-8 rounded-3xl backdrop-blur-3xl border">
           <div className="flex justify-center mb-8">
             <img src={appLogo} alt="Trackd" className="h-8 w-auto object-contain" />
           </div>
@@ -76,17 +85,21 @@ const Auth = () => {
           {isResetPassword ? (
             // Reset Password Form
             <div key="reset-password-form">
-              <h2 className="text-xl font-semibold text-white mb-6 text-center">
+              <h2 style={{ color: 'var(--text)' }} className="text-xl font-semibold mb-6 text-center">
                 Reset Password
               </h2>
               {resetSuccess ? (
-                <div className="p-4 rounded-lg bg-green-500/20 border border-green-500/50 text-green-200 text-center mb-4">
+                <div style={{
+                  backgroundColor: 'var(--accent)/20',
+                  borderColor: 'var(--accent)',
+                  color: 'var(--text)'
+                }} className="p-4 rounded-lg border text-center mb-4">
                   Check your inbox! / Sprawdź swoją skrzynkę e-mail!
                 </div>
               ) : (
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div>
-                    <label className="block text-white/80 text-sm font-medium mb-2">
+                    <label style={{ color: 'var(--text)' }} className="block text-sm font-medium mb-2 opacity-80">
                       Email
                     </label>
                     <input
@@ -94,19 +107,32 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition"
+                      style={{
+                        backgroundColor: 'var(--card)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text)'
+                      }}
+                      className="w-full px-4 py-2 rounded-lg border focus:outline-none transition"
                       required
                     />
                   </div>
                   {error && (
-                    <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-200 text-sm">
+                    <div style={{
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      borderColor: 'var(--accent)',
+                      color: 'var(--text)'
+                    }} className="p-3 rounded-lg border text-sm">
                       {error}
                     </div>
                   )}
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:opacity-90 disabled:opacity-50 transition"
+                    style={{
+                      backgroundColor: 'var(--accent)',
+                      color: 'var(--text)'
+                    }}
+                    className="w-full px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition"
                   >
                     {loading ? 'Loading...' : 'Send reset link / Wyślij link'}
                   </button>
@@ -120,7 +146,8 @@ const Auth = () => {
                     setError('');
                     setEmail('');
                   }}
-                  className="text-blue-300 hover:text-blue-200 text-sm font-medium transition"
+                  style={{ color: 'var(--accent)' }}
+                  className="hover:opacity-80 text-sm font-medium transition"
                 >
                   Back to Sign In
                 </button>
@@ -131,7 +158,7 @@ const Auth = () => {
             <div key="login-signup-form">
               <form onSubmit={handleAuth} className="space-y-4">
                 <div>
-                  <label className="block text-white/80 text-sm font-medium mb-2">
+                  <label style={{ color: 'var(--text)' }} className="block text-sm font-medium mb-2 opacity-80">
                     Email
                   </label>
                   <input
@@ -139,12 +166,17 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition"
+                    style={{
+                      backgroundColor: 'var(--card)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text)'
+                    }}
+                    className="w-full px-4 py-2 rounded-lg border focus:outline-none transition"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-white/80 text-sm font-medium mb-2">
+                  <label style={{ color: 'var(--text)' }} className="block text-sm font-medium mb-2 opacity-80">
                     Password
                   </label>
                   <input
@@ -152,19 +184,32 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition"
+                    style={{
+                      backgroundColor: 'var(--card)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text)'
+                    }}
+                    className="w-full px-4 py-2 rounded-lg border focus:outline-none transition"
                     required
                   />
                 </div>
                 {error && (
-                  <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-200 text-sm">
+                  <div style={{
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderColor: 'var(--accent)',
+                    color: 'var(--text)'
+                  }} className="p-3 rounded-lg border text-sm">
                     {error}
                   </div>
                 )}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:opacity-90 disabled:opacity-50 transition"
+                  style={{
+                    backgroundColor: 'var(--accent)',
+                    color: 'white'
+                  }}
+                  className="w-full px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition"
                 >
                   {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
                 </button>
@@ -176,14 +221,15 @@ const Auth = () => {
                       setIsResetPassword(true);
                       setError('');
                     }}
-                    className="text-blue-300 hover:text-blue-200 text-sm font-medium transition"
+                    style={{ color: 'var(--accent)' }}
+                    className="hover:opacity-80 text-sm font-medium transition"
                   >
                     Forgot password? / Zapomniałeś hasła?
                   </button>
                 </div>
               )}
               <div className="mt-6 text-center">
-                <p className="text-white/60 text-sm">
+                <p style={{ color: 'var(--text)' }} className="opacity-60 text-sm">
                   {isSignUp ? 'Already have an account?' : "Don't have an account?"}
                 </p>
                 <button
@@ -191,7 +237,8 @@ const Auth = () => {
                     setIsSignUp(!isSignUp);
                     setError('');
                   }}
-                  className="text-blue-300 hover:text-blue-200 text-sm font-medium mt-2 transition"
+                  style={{ color: 'var(--accent)' }}
+                  className="hover:opacity-80 text-sm font-medium mt-2 transition"
                 >
                   {isSignUp ? 'Sign In' : 'Sign Up'}
                 </button>

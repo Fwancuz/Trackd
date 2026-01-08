@@ -151,29 +151,29 @@ const Progress = ({ completedSessions, language = 'en' }) => {
         <div className="exercise-graph-card full-width">
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis 
                 dataKey="date" 
-                stroke="#888"
-                tick={{ fontSize: 12 }}
+                stroke="var(--text-muted)"
+                tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
               />
               <YAxis 
-                stroke="#888"
+                stroke="var(--text-muted)"
                 domain={['dataMin - 1', 'dataMax + 1']}
-                tick={{ fontSize: 12 }}
-                label={{ value: selectedMetric === 'weight' ? 'kg' : 'Reps', angle: -90, position: 'insideLeft', offset: 10 }}
+                tick={{ fontSize: 12, fill: 'var(--text-muted)' }}
+                label={{ value: selectedMetric === 'weight' ? 'kg' : 'Reps', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--text-muted)' }}
               />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #666', borderRadius: '4px' }}
-                labelStyle={{ color: '#fff' }}
+                contentStyle={{ backgroundColor: 'var(--card)', border: `1px solid var(--border)`, borderRadius: '4px' }}
+                labelStyle={{ color: 'var(--text)' }}
                 formatter={(value) => [value, selectedMetric === 'weight' ? 'Weight (kg)' : 'Reps']}
               />
               <Legend />
               <Line
                 type="monotone"
                 dataKey={selectedMetric}
-                stroke="#3b82f6"
-                dot={{ fill: '#3b82f6', r: 5 }}
+                stroke="var(--accent)"
+                dot={{ fill: 'var(--accent)', r: 5 }}
                 activeDot={{ r: 7 }}
                 name={selectedMetric === 'weight' ? 'Weight (kg)' : 'Reps'}
                 strokeWidth={3}
