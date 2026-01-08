@@ -49,28 +49,8 @@ const AppSettings = ({ settings, updateSettings, logout, onResetStats, onFetchSe
     <div className="ui-center">
       <div className="app-settings">
         <div className="settings-content">
-          <h2>{t.language}</h2>
-          <div className="language-options">
-            {languages.map(lang => (
-              <button
-                key={lang.code}
-                onClick={() => handleLanguageChange(lang.code)}
-                className={`language-btn ${settings.language === lang.code ? 'active' : ''}`}
-                style={settings.language === lang.code ? {
-                  backgroundColor: 'var(--accent)',
-                  color: 'var(--bg)',
-                } : {}}
-              >
-                {lang.code === 'en' ? t.english : t.polish}
-              </button>
-            ))}
-          </div>
-          <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            {t.languageNote}
-          </p>
-
           {/* Theme Section */}
-          <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `1px solid var(--border)` }}>
+          <div style={{ paddingBottom: '2rem' }}>
             <h2 style={{ marginBottom: '1rem' }}>{language === 'pl' ? 'Wybierz Motyw' : 'Choose Theme'}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {availableThemes.map(themeOption => (
@@ -151,9 +131,53 @@ const AppSettings = ({ settings, updateSettings, logout, onResetStats, onFetchSe
             </div>
           </div>
 
-          <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            {t.languageNote}
-          </p>
+          {/* Language Selector Section - After Themes */}
+          <div style={{ marginTop: '1.25rem', paddingTop: '2rem', borderTop: `1px solid var(--border)` }}>
+            <label style={{ 
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: 'var(--text)',
+              opacity: 0.7,
+              marginBottom: '0.75rem'
+            }}>
+              Language / Język
+            </label>
+            <select
+              value={settings.language || 'en'}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              style={{
+                width: '100%',
+                backgroundColor: 'var(--bg)',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                position: 'relative',
+                display: 'block'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--accent)';
+                e.target.style.boxShadow = '0 0 0 3px var(--accent)/20';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border)';
+                e.target.style.boxShadow = 'none';
+              }}
+            >
+              {languages.map(lang => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.code === 'en' ? t.english : t.polish}
+                </option>
+              ))}
+            </select>
+            <p style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {t.languageNote}
+            </p>
+          </div>
 
           {/* Account Section */}
           <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: `1px solid var(--border)` }}>
