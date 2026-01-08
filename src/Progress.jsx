@@ -2,12 +2,17 @@ import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import translations from './translations';
 import EXERCISE_LIST from './exerciseList';
-import appLogo from './assets/logonewtransparent.png';
+import { useTheme } from './ThemeContext';
+import appLogoTransparent from './assets/logonewtransparent.png';
+import appLogoMetal from './assets/logometal.png';
 
 const Progress = ({ completedSessions, language = 'en' }) => {
   const t = translations[language];
   const [selectedMetric, setSelectedMetric] = useState(null); // null, 'weight', or 'reps'
   const [selectedExercise, setSelectedExercise] = useState(null);
+  
+  const { theme } = useTheme();
+  const appLogo = theme === 'metal' ? appLogoMetal : appLogoTransparent;
 
   // Aggregate exercise data from completed sessions
   const exerciseData = useMemo(() => {

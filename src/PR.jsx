@@ -5,7 +5,9 @@ import translations from './translations';
 import EXERCISE_LIST from './exerciseList';
 import ConfirmModal from './ConfirmModal';
 import { useToast } from './ToastContext';
-import appLogo from './assets/logonewtransparent.png';
+import { useTheme } from './ThemeContext';
+import appLogoTransparent from './assets/logonewtransparent.png';
+import appLogoMetal from './assets/logometal.png';
 
 const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
   const t = translations[language];
@@ -14,6 +16,8 @@ const PR = ({ personalRecords, onAddPR, onDeletePR, language = 'en' }) => {
   const [formData, setFormData] = useState({ exercise: '', weight: '', reps: '' });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, prId: null });
   const { success } = useToast();
+  const { theme } = useTheme();
+  const appLogo = theme === 'metal' ? appLogoMetal : appLogoTransparent;
 
   // Group PRs by exercise and sort by date
   const prsByExercise = useMemo(() => {

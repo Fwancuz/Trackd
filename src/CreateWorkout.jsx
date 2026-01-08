@@ -4,8 +4,10 @@ import ExerciseSelect from './ExerciseSelect';
 import translations from './translations';
 import EXERCISE_LIST from './exerciseList';
 import { useToast } from './ToastContext';
+import { useTheme } from './ThemeContext';
 import { supabase, fetchUserSplits, assignTemplateToSplit } from './supabaseClient';
-import appLogo from './assets/logonewtransparent.png';
+import appLogoTransparent from './assets/logonewtransparent.png';
+import appLogoMetal from './assets/logometal.png';
 
 const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, onEditComplete = null, userId = null, onRefreshTemplates = null }) => {
   const [workoutName, setWorkoutName] = useState('');
@@ -14,7 +16,11 @@ const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, on
   const [splits, setSplits] = useState([]);
   const [selectedSplitId, setSelectedSplitId] = useState('');
   const { success } = useToast();
+  const { theme } = useTheme();
   const t = translations[language];
+  
+  // Select logo based on current theme
+  const appLogo = theme === 'metal' ? appLogoMetal : appLogoTransparent;
 
   // Fetch splits
   useEffect(() => {

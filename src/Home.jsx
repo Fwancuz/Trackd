@@ -11,7 +11,8 @@ import { useToast } from './ToastContext';
 import { useTheme } from './ThemeContext';
 import { useWorkoutHistory } from './useWorkoutHistory';
 import { supabase, fetchUserSplits, createSplit, deleteSplit } from './supabaseClient';
-import appLogo from './assets/logonewtransparent.png';
+import appLogoTransparent from './assets/logonewtransparent.png';
+import appLogoMetal from './assets/logometal.png';
 
 const ACTIVE_SESSION_KEY = 'trackd_active_session';
 
@@ -395,7 +396,11 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
   }, [completedSessions]);
 
   // Rank system with Lucide icons
+  const { theme } = useTheme();
   const themeInfo = useTheme()?.themeInfo || {};
+  
+  // Select logo based on current theme
+  const appLogo = theme === 'metal' ? appLogoMetal : appLogoTransparent;
 
   const RankIcon = ({ tier }) => {
     const iconProps = { size: 20, strokeWidth: 1.5 };

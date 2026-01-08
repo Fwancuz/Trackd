@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from './supabaseClient';
-import appLogo from './assets/logonewtransparent.png';
+import { useTheme } from './ThemeContext';
+import appLogoTransparent from './assets/logonewtransparent.png';
+import appLogoMetal from './assets/logometal.png';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +12,9 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  
+  const { theme } = useTheme();
+  const appLogo = theme === 'metal' ? appLogoMetal : appLogoTransparent;
 
   const handleAuth = async (e) => {
     e.preventDefault();
