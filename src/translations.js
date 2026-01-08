@@ -29,6 +29,8 @@ const translations = {
     addExercise: 'Add Exercise',
     saveWorkout: 'Save Workout',
     workoutSaved: 'Workout saved!',
+    splitAssignment: 'Split (optional)',
+    noneGeneral: 'None - General',
 
     // Workout Player
     targetSets: 'Target Sets',
@@ -129,6 +131,8 @@ const translations = {
     addExercise: 'Dodaj Ćwiczenie',
     saveWorkout: 'Zapisz Trening',
     workoutSaved: 'Trening zapisany!',
+    splitAssignment: 'Kategoria (opcjonalnie)',
+    noneGeneral: 'Brak - Ogólne',
 
     // Workout Player
     targetSets: 'Serie',

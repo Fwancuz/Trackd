@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, startTransition } from 'react';
-import { Medal, Trophy, Zap, Target, History, Clock, Play, Pencil, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Medal, Trophy, Zap, Target, History, Clock, Play, Pencil, MoreVertical, Edit2, Trash2, Plus, X as XIcon } from 'lucide-react';
 import WorkoutPlayer from './WorkoutPlayer';
 import ConfirmModal from './ConfirmModal';
 import RecentHistory from './RecentHistory';
@@ -10,12 +10,12 @@ import translations from './translations';
 import { useToast } from './ToastContext';
 import { useTheme } from './ThemeContext';
 import { useWorkoutHistory } from './useWorkoutHistory';
-import { supabase } from './supabaseClient';
+import { supabase, fetchUserSplits, createSplit, deleteSplit } from './supabaseClient';
 import appLogo from './assets/logonewtransparent.png';
 
 const ACTIVE_SESSION_KEY = 'trackd_active_session';
 
-const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, language = 'en', recoveredSession = null, userId = null, onRefreshCompletedSessions = null, onEditTemplate = null, onNavigateToCreate = null }) => {
+const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, language = 'en', recoveredSession = null, userId = null, onRefreshCompletedSessions = null, onEditTemplate = null, onNavigateToCreate = null, templatesRefreshKey = 0 }) => {
   const [activeWorkout, setActiveWorkout] = useState(() => {
     try {
       const savedSession = localStorage.getItem(ACTIVE_SESSION_KEY);
@@ -39,39 +39,76 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
   const [statsRefreshKey, setStatsRefreshKey] = useState(0);
   const [heatmapRefreshKey, setHeatmapRefreshKey] = useState(0);
   const [templates, setTemplates] = useState([]);
+  const [splits, setSplits] = useState([]);
   const [_loadingTemplates, setLoadingTemplates] = useState(false);
+  const [showAddSplit, setShowAddSplit] = useState(false);
+  const [newSplitName, setNewSplitName] = useState('');
+  const [deleteSplitModal, setDeleteSplitModal] = useState({ isOpen: false, splitId: null, splitName: '' });
+  const [editSplitModal, setEditSplitModal] = useState({ isOpen: false, splitId: null, currentName: '', newName: '' });
   const { success } = useToast();
   const t = translations[language];
   
   // Initialize workout history hook
   const { deleteSession } = useWorkoutHistory(userId);
 
-  // Fetch templates from Supabase
+  /**
+   * Refresh templates and splits from Supabase
+   */
+  const refreshTemplatesAndSplits = async () => {
+    if (!userId) return;
+    try {
+      // Fetch templates
+      const { data: templatesData, error: templatesError } = await supabase
+        .from('workout_templates')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (templatesError) {
+        console.error('Error fetching templates:', templatesError);
+      } else {
+        setTemplates(templatesData || []);
+      }
+
+      // Fetch splits
+      const splitsData = await fetchUserSplits(userId);
+      setSplits(splitsData || []);
+    } catch (err) {
+      console.error('Error refreshing templates and splits:', err);
+    }
+  };
+
+  // Fetch templates and splits from Supabase
   useEffect(() => {
-    const fetchTemplates = async () => {
+    const fetchData = async () => {
       if (!userId) return;
       setLoadingTemplates(true);
       try {
-        const { data, error } = await supabase
+        // Fetch templates
+        const { data: templatesData, error: templatesError } = await supabase
           .from('workout_templates')
           .select('*')
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
         
-        if (error) {
-          console.error('Error fetching templates:', error);
+        if (templatesError) {
+          console.error('Error fetching templates:', templatesError);
         } else {
-          setTemplates(data || []);
+          setTemplates(templatesData || []);
         }
+
+        // Fetch splits
+        const splitsData = await fetchUserSplits(userId);
+        setSplits(splitsData || []);
       } catch (err) {
-        console.error('Error fetching templates:', err);
+        console.error('Error fetching data:', err);
       } finally {
         setLoadingTemplates(false);
       }
     };
 
-    fetchTemplates();
-  }, [userId]);
+    fetchData();
+  }, [userId, templatesRefreshKey]);
 
   // Initialize with recovered session if it exists
   useEffect(() => {
@@ -216,6 +253,114 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
     }
   ];
 
+  /**
+   * Handle adding a new split
+   */
+  const handleAddSplit = async () => {
+    if (!newSplitName.trim()) return;
+    
+    try {
+      const newSplit = await createSplit(userId, newSplitName.trim());
+      if (newSplit) {
+        setSplits([...splits, newSplit]);
+        setNewSplitName('');
+        setShowAddSplit(false);
+        success(language === 'pl' ? 'Kategoria utworzona!' : 'Split created!');
+      }
+    } catch (error) {
+      console.error('Error creating split:', error);
+      success(language === 'pl' ? 'Błąd przy tworzeniu kategorii' : 'Error creating split');
+    }
+  };
+
+  /**
+   * Handle editing split name
+   */
+  const handleEditSplit = (splitId, currentName) => {
+    setEditSplitModal({
+      isOpen: true,
+      splitId: splitId,
+      currentName: currentName,
+      newName: currentName
+    });
+  };
+
+  /**
+   * Confirm update of split name
+   */
+  const handleConfirmUpdateSplit = async () => {
+    const { splitId, newName } = editSplitModal;
+    
+    if (!newName.trim() || newName === editSplitModal.currentName) {
+      setEditSplitModal({ isOpen: false, splitId: null, currentName: '', newName: '' });
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('workout_splits')
+        .update({ name: newName.trim() })
+        .eq('id', splitId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setSplits(prev => prev.map(s => 
+        s.id === splitId ? { ...s, name: newName.trim() } : s
+      ));
+      
+      success(language === 'pl' ? 'Kategoria zaktualizowana!' : 'Split updated!');
+      setEditSplitModal({ isOpen: false, splitId: null, currentName: '', newName: '' });
+    } catch (error) {
+      console.error('Error updating split:', error);
+      success(language === 'pl' ? 'Błąd przy aktualizacji kategorii' : 'Error updating split');
+    }
+  };
+
+  /**
+   * Handle deleting a split
+   */
+  const handleDeleteSplit = (splitId, splitName) => {
+    setDeleteSplitModal({
+      isOpen: true,
+      splitId: splitId,
+      splitName: splitName
+    });
+  };
+
+  /**
+   * Confirm deletion of split
+   */
+  const handleConfirmDeleteSplit = async () => {
+    const splitIdToDelete = deleteSplitModal.splitId;
+    
+    try {
+      // Remove from local state immediately
+      setSplits(prev => prev.filter(s => s.id !== splitIdToDelete));
+      setDeleteSplitModal({ isOpen: false, splitId: null, splitName: '' });
+      
+      // Delete from database (which sets template split_ids to NULL)
+      const deletionSuccess = await deleteSplit(splitIdToDelete);
+      
+      if (deletionSuccess) {
+        // Refresh templates to reflect the changes
+        const { data: templatesData } = await supabase
+          .from('workout_templates')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        setTemplates(templatesData || []);
+        
+        success(language === 'pl' ? 'Kategoria usunięta!' : 'Split deleted!');
+      }
+    } catch (error) {
+      console.error('Error deleting split:', error);
+      // Refetch splits if deletion failed
+      const splitsData = await fetchUserSplits(userId);
+      setSplits(splitsData || []);
+    }
+  };
+
   // Calculate total lifetime volume using useMemo
   const { totalLifetimeVolume, totalSessions } = useMemo(() => {
     let total = 0;
@@ -290,6 +435,38 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
     const range = nextRank.min - currentRank.min;
     return Math.min(100, Math.max(0, (current / range) * 100));
   }, [totalLifetimeVolume, currentRank, nextRank]);
+
+  /**
+   * Group templates by split and organize data
+   */
+  const groupedTemplates = useMemo(() => {
+    const groups = {};
+    
+    // Initialize groups for all splits
+    splits.forEach(split => {
+      groups[split.id] = {
+        split: split,
+        templates: []
+      };
+    });
+    
+    // Add "Uncategorized" group
+    groups['uncategorized'] = {
+      split: null,
+      templates: []
+    };
+    
+    // Group templates
+    templates.forEach(template => {
+      if (template.split_id && groups[template.split_id]) {
+        groups[template.split_id].templates.push(template);
+      } else {
+        groups['uncategorized'].templates.push(template);
+      }
+    });
+    
+    return groups;
+  }, [templates, splits]);
 
 
 
@@ -538,12 +715,259 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
           <div className="workout-selection">
             {activeTab === 'plans' && (
               <div className="plans-content">
-                <h2 className="section-title">{t.yourPlans}</h2>
-                <section className="templates-grid-container">
-                  {templates.length === 0 ? (
-                    <div className="empty-templates-state">
-                      <div className="empty-templates-content">
-                        <p className="empty-templates-message">{t.startByCreatingTemplate}</p>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="section-title">{t.yourPlans}</h2>
+                  {!showAddSplit && (
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => setShowAddSplit(true)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                      <Plus size={16} />
+                      <span>{language === 'pl' ? 'Kategoria' : 'Split'}</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Add Split Input */}
+                {showAddSplit && (
+                  <div style={{
+                    backgroundColor: 'var(--card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.75rem',
+                    padding: '1rem',
+                    marginBottom: '1.5rem',
+                    display: 'flex',
+                    gap: '0.75rem'
+                  }}>
+                    <input
+                      type="text"
+                      placeholder={language === 'pl' ? 'Nazwa kategorii...' : 'Split name...'}
+                      value={newSplitName}
+                      onChange={(e) => setNewSplitName(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddSplit()}
+                      autoFocus
+                      style={{
+                        flex: 1,
+                        padding: '0.625rem',
+                        backgroundColor: 'var(--input-bg)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '0.5rem',
+                        color: 'var(--text)',
+                        fontSize: '0.875rem'
+                      }}
+                    />
+                    <button
+                      className="btn"
+                      onClick={handleAddSplit}
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      {language === 'pl' ? 'Dodaj' : 'Add'}
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={() => {
+                        setShowAddSplit(false);
+                        setNewSplitName('');
+                      }}
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      <XIcon size={16} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {templates.length === 0 && splits.length === 0 ? (
+                  <div className="empty-templates-state">
+                    <div className="empty-templates-content">
+                      <p className="empty-templates-message">{t.startByCreatingTemplate}</p>
+                      <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column', marginTop: '1.5rem' }}>
+                        <button 
+                          className="btn primary create-template-btn"
+                          onClick={handleCreateTemplate}
+                        >
+                          + {t.createNewTemplate}
+                        </button>
+                        <button
+                          className="btn"
+                          onClick={() => setShowAddSplit(true)}
+                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                        >
+                          <Plus size={16} />
+                          <span>{language === 'pl' ? 'Utwórz Pierwszą Kategorię' : 'Create Your First Split'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <section className="templates-grid-container">
+                    {/* Render each split group */}
+                    {Object.entries(groupedTemplates).map(([key, group]) => {
+                      // Skip empty groups except uncategorized
+                      if (group.templates.length === 0 && key !== 'uncategorized') return null;
+
+                      const isUncategorized = key === 'uncategorized';
+                      const splitName = isUncategorized 
+                        ? (language === 'pl' ? 'Ogólne' : 'General')
+                        : group.split?.name;
+
+                      return (
+                        <div key={key}>
+                          {/* Split Section Header */}
+                          <div style={{
+                            backgroundColor: 'var(--card)',
+                            borderLeft: '4px solid var(--accent)',
+                            padding: '1rem',
+                            marginBottom: '1rem',
+                            borderRadius: '0.5rem',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.75rem'
+                            }}>
+                              <h3 style={{
+                                color: 'var(--text)',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                margin: 0
+                              }}>
+                                {splitName}
+                              </h3>
+                              {!isUncategorized && group.split && (
+                                <button
+                                  onClick={() => handleEditSplit(group.split.id, group.split.name)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: 'var(--text-muted)',
+                                    padding: '0.25rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    opacity: 0.6,
+                                    transition: 'opacity 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => e.target.style.opacity = '1'}
+                                  onMouseLeave={(e) => e.target.style.opacity = '0.6'}
+                                  title={language === 'pl' ? 'Edytuj nazwę' : 'Edit name'}
+                                >
+                                  <Edit2 size={16} />
+                                </button>
+                              )}
+                            </div>
+                            {!isUncategorized && group.split && (
+                              <button
+                                onClick={() => handleDeleteSplit(group.split.id, group.split.name)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  color: 'var(--text-muted)',
+                                  padding: '0.25rem',
+                                  display: 'flex',
+                                  alignItems: 'center'
+                                }}
+                                title={language === 'pl' ? 'Usuń kategorię' : 'Delete split'}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Templates Grid for this split */}
+                          {group.templates.length === 0 ? (
+                            <div style={{
+                              padding: '2rem 1rem',
+                              textAlign: 'center',
+                              color: 'var(--text-muted)',
+                              fontSize: '0.875rem',
+                              marginBottom: '2rem'
+                            }}>
+                              {isUncategorized 
+                                ? (language === 'pl' ? 'Brak treningów w tej kategorii' : 'No workouts in this split')
+                                : (language === 'pl' ? 'Brak treningów w tym splicie' : 'No workouts in this split yet')
+                              }
+                            </div>
+                          ) : (
+                            <div className="templates-grid" style={{ marginBottom: '2rem' }}>
+                              {group.templates.map((template) => {
+                                const exerciseCount = template.exercises ? template.exercises.length : 0;
+                                return (
+                                  <div key={`template-${template.id}`} className="template-card">
+                                    <div className="template-card-header">
+                                      <h3 className="template-name">{template.name}</h3>
+                                      <div className="template-menu" onClick={(e) => e.stopPropagation()}>
+                                        <MoreMenu items={getTemplateMenuItems(template)} />
+                                      </div>
+                                    </div>
+                                    <div className="template-exercises-count">
+                                      <span className="exercises-count-badge">
+                                        {exerciseCount} {language === 'pl' ? 'ćwiczenia' : 'exercises'}
+                                      </span>
+                                    </div>
+                                    <div className="template-actions">
+                                      <button 
+                                        className="btn template-start-btn"
+                                        onClick={() => {
+                                          const workoutToStart = {
+                                            id: template.id,
+                                            name: template.name,
+                                            exercises: template.exercises || [],
+                                          };
+                                          try {
+                                            const exerciseSets = (workoutToStart.exercises || []).map((ex) => {
+                                              const targetSets = parseInt(ex.sets) || 1;
+                                              return {
+                                                name: ex.name,
+                                                targetSets,
+                                                targetReps: ex.reps,
+                                                targetWeight: ex.weight,
+                                                sets: Array.from({ length: targetSets }, (_, i) => ({
+                                                  id: i,
+                                                  completed: false,
+                                                  reps: '',
+                                                  weight: '',
+                                                })),
+                                              };
+                                            });
+
+                                            localStorage.setItem(
+                                              ACTIVE_SESSION_KEY,
+                                              JSON.stringify({
+                                                workoutName: workoutToStart.name,
+                                                exerciseSets,
+                                                currentExerciseIndex: 0,
+                                                currentSetIndex: 0,
+                                                workoutStartTime: Date.now(),
+                                              })
+                                            );
+                                          } catch (error) {
+                                            console.error('Error saving trackd_active_session:', error);
+                                          }
+                                          setActiveWorkout(workoutToStart);
+                                        }}
+                                      >
+                                        <Play size={14} strokeWidth={2} />
+                                        <span>{language === 'pl' ? 'Start' : 'Start'}</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Create Template Button at the bottom */}
+                    {templates.length > 0 && (
+                      <div style={{ textAlign: 'center', padding: '2rem 0' }}>
                         <button 
                           className="btn primary create-template-btn"
                           onClick={handleCreateTemplate}
@@ -551,76 +975,9 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
                           + {t.createNewTemplate}
                         </button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="templates-grid">
-                      {templates.map((template) => {
-                        const exerciseCount = template.exercises ? template.exercises.length : 0;
-                        return (
-                          <div key={`template-${template.id}`} className="template-card">
-                            <div className="template-card-header">
-                              <h3 className="template-name">{template.name}</h3>
-                              <div className="template-menu" onClick={(e) => e.stopPropagation()}>
-                                <MoreMenu items={getTemplateMenuItems(template)} />
-                              </div>
-                            </div>
-                            <div className="template-exercises-count">
-                              <span className="exercises-count-badge">
-                                {exerciseCount} {language === 'pl' ? 'ćwiczenia' : 'exercises'}
-                              </span>
-                            </div>
-                            <div className="template-actions">
-                              <button 
-                                className="btn template-start-btn"
-                                onClick={() => {
-                                  const workoutToStart = {
-                                    id: template.id,
-                                    name: template.name,
-                                    exercises: template.exercises || [],
-                                  };
-                                  try {
-                                    const exerciseSets = (workoutToStart.exercises || []).map((ex) => {
-                                      const targetSets = parseInt(ex.sets) || 1;
-                                      return {
-                                        name: ex.name,
-                                        targetSets,
-                                        targetReps: ex.reps,
-                                        targetWeight: ex.weight,
-                                        sets: Array.from({ length: targetSets }, (_, i) => ({
-                                          id: i,
-                                          completed: false,
-                                          reps: '',
-                                          weight: '',
-                                        })),
-                                      };
-                                    });
-
-                                    localStorage.setItem(
-                                      ACTIVE_SESSION_KEY,
-                                      JSON.stringify({
-                                        workoutName: workoutToStart.name,
-                                        exerciseSets,
-                                        currentExerciseIndex: 0,
-                                        currentSetIndex: 0,
-                                        workoutStartTime: Date.now(),
-                                      })
-                                    );
-                                  } catch (error) {
-                                    console.error('Error saving trackd_active_session:', error);
-                                  }
-                                  setActiveWorkout(workoutToStart);
-                                }}
-                              >
-                                <Play size={14} strokeWidth={2} />
-                                <span>{language === 'pl' ? 'Start' : 'Start'}</span>
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </section>
+                    )}
+                  </section>
+                )}
               </div>
             )}
 
@@ -651,6 +1008,116 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
         cancelText={t.cancel}
         isDangerous={true}
       />
+      <ConfirmModal
+        isOpen={deleteSplitModal.isOpen}
+        title={language === 'pl' ? 'Usuń Kategorię' : 'Delete Split'}
+        message={`${language === 'pl' ? 'Czy na pewno chcesz usunąć kategorię' : 'Are you sure you want to delete the split'} "${deleteSplitModal.splitName}"? ${language === 'pl' ? 'Treningi w tej kategorii zostaną przeniesione do sekcji "Ogólne".' : 'Workouts in this split will be moved to "General" section.'}`}
+        onConfirm={handleConfirmDeleteSplit}
+        onCancel={() => setDeleteSplitModal({ isOpen: false, splitId: null, splitName: '' })}
+        confirmText={t.delete}
+        cancelText={t.cancel}
+        isDangerous={true}
+      />
+
+      {/* Edit Split Name Modal */}
+      {editSplitModal.isOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '0.75rem',
+            padding: '1.5rem',
+            maxWidth: '400px',
+            width: '90%'
+          }}>
+            <h2 style={{
+              color: 'var(--text)',
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              marginBottom: '1rem',
+              margin: 0,
+              marginBottom: '1.5rem'
+            }}>
+              {language === 'pl' ? 'Edytuj Nazwę Kategorii' : 'Edit Split Name'}
+            </h2>
+            
+            <input
+              type="text"
+              value={editSplitModal.newName}
+              onChange={(e) => setEditSplitModal({
+                ...editSplitModal,
+                newName: e.target.value
+              })}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleConfirmUpdateSplit();
+                }
+              }}
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                backgroundColor: 'var(--input-bg)',
+                border: '1px solid var(--border)',
+                borderRadius: '0.5rem',
+                color: 'var(--text)',
+                fontSize: '1rem',
+                marginBottom: '1.5rem',
+                boxSizing: 'border-box'
+              }}
+              placeholder={language === 'pl' ? 'Nazwa kategorii' : 'Split name'}
+            />
+
+            <div style={{
+              display: 'flex',
+              gap: '0.75rem',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setEditSplitModal({ isOpen: false, splitId: null, currentName: '', newName: '' })}
+                style={{
+                  padding: '0.625rem 1.25rem',
+                  backgroundColor: 'var(--border)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.5rem',
+                  color: 'var(--text)',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                {t.cancel}
+              </button>
+              <button
+                onClick={handleConfirmUpdateSplit}
+                style={{
+                  padding: '0.625rem 1.25rem',
+                  backgroundColor: 'var(--accent)',
+                  border: '1px solid var(--accent)',
+                  borderRadius: '0.5rem',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                {language === 'pl' ? 'Aktualizuj' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

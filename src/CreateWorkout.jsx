@@ -4,21 +4,49 @@ import ExerciseSelect from './ExerciseSelect';
 import translations from './translations';
 import EXERCISE_LIST from './exerciseList';
 import { useToast } from './ToastContext';
-import { supabase } from './supabaseClient';
+import { supabase, fetchUserSplits, assignTemplateToSplit } from './supabaseClient';
 import appLogo from './assets/logonewtransparent.png';
 
-const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, onEditComplete = null }) => {
+const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, onEditComplete = null, userId = null, onRefreshTemplates = null }) => {
   const [workoutName, setWorkoutName] = useState('');
   const [exercises, setExercises] = useState([{ name: '', sets: '', reps: '', weight: '' }]);
   const [isEditing, setIsEditing] = useState(false);
+  const [splits, setSplits] = useState([]);
+  const [selectedSplitId, setSelectedSplitId] = useState('');
   const { success } = useToast();
   const t = translations[language];
+
+  // Fetch splits
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userId) return;
+      
+      try {
+        const splitsData = await fetchUserSplits(userId);
+        setSplits(splitsData || []);
+      } catch (error) {
+        console.error('Error fetching splits:', error);
+      }
+    };
+    
+    fetchData();
+  }, [userId]);
 
   // Pre-populate form when editing a template
   useEffect(() => {
     if (editingTemplate) {
       setIsEditing(true);
       setWorkoutName(editingTemplate.name);
+      // Use empty string for null split_id, otherwise use the ID as string
+      const newSplitId = editingTemplate.split_id ? String(editingTemplate.split_id) : '';
+      setSelectedSplitId(newSplitId);
+      console.log('🔍 Editing template:', {
+        templateName: editingTemplate.name,
+        templateSplitId: editingTemplate.split_id,
+        setTo: newSplitId,
+        availableSplits: splits,
+        splitIdType: typeof newSplitId
+      });
       if (editingTemplate.exercises && editingTemplate.exercises.length > 0) {
         setExercises(editingTemplate.exercises);
       } else {
@@ -27,6 +55,8 @@ const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, on
     } else {
       setIsEditing(false);
       setWorkoutName('');
+      setSelectedSplitId('');
+      console.log('🔍 Creating new template, reset form');
       setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
     }
   }, [editingTemplate]);
@@ -49,6 +79,18 @@ const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, on
 
   const saveWorkout = async () => {
     if (workoutName && exercises.some(e => e.name)) {
+      // split_id is UUID string in database, no conversion needed
+      const splitIdForDB = selectedSplitId && selectedSplitId !== '' ? selectedSplitId : null;
+      
+      console.log('💾 Saving workout:', {
+        workoutName,
+        selectedSplitId,
+        splitIdForDB,
+        isEditing,
+        templateId: editingTemplate?.id,
+        splitIdType: typeof splitIdForDB
+      });
+
       if (isEditing && editingTemplate) {
         // Update existing template
         try {
@@ -56,7 +98,8 @@ const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, on
             .from('workout_templates')
             .update({
               name: workoutName,
-              exercises: exercises.filter(e => e.name)
+              exercises: exercises.filter(e => e.name),
+              split_id: splitIdForDB
             })
             .eq('id', editingTemplate.id);
 
@@ -67,7 +110,13 @@ const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, on
           // Reset form
           setWorkoutName('');
           setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
+          setSelectedSplitId('');
           setIsEditing(false);
+          
+          // Refresh templates to reflect changes in Home screen
+          if (onRefreshTemplates) {
+            onRefreshTemplates();
+          }
           
           // Call completion callback
           if (onEditComplete) {
@@ -75,21 +124,49 @@ const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, on
           }
         } catch (error) {
           console.error('Error updating template:', error);
+          success(language === 'pl' ? 'Błąd przy aktualizacji planu' : 'Error updating template');
         }
       } else {
-        // Create new template
-        const workout = {
-          id: Date.now(),
-          name: workoutName,
-          date: new Date().toISOString(),
-          exercises: exercises.filter(e => e.name)
-        };
-        addWorkout(workout);
-        setWorkoutName('');
-        setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
-        
-        // Show toast notification
-        success(t.workoutSaved);
+        // Create new template via supabase
+        try {
+          const { data, error } = await supabase
+            .from('workout_templates')
+            .insert({
+              user_id: userId,
+              name: workoutName,
+              exercises: exercises.filter(e => e.name),
+              split_id: splitIdForDB
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          success(t.workoutSaved);
+          
+          // Reset form
+          setWorkoutName('');
+          setExercises([{ name: '', sets: '', reps: '', weight: '' }]);
+          setSelectedSplitId('');
+          
+          // Refresh templates to reflect changes in Home screen
+          if (onRefreshTemplates) {
+            onRefreshTemplates();
+          }
+          
+          // Call the addWorkout callback if provided
+          if (addWorkout && data) {
+            addWorkout(data);
+          }
+          
+          // Call completion callback
+          if (onEditComplete) {
+            onEditComplete();
+          }
+        } catch (error) {
+          console.error('Error creating template:', error);
+          success(language === 'pl' ? 'Błąd przy tworzeniu planu' : 'Error creating template');
+        }
       }
     }
   };
@@ -107,6 +184,46 @@ const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, on
           onChange={(e) => setWorkoutName(e.target.value)}
           className="workout-input"
         />
+        
+        {/* Split Assignment Dropdown */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: 'var(--text-muted)'
+          }}>
+            {language === 'pl' ? 'Kategoria (opcjonalnie)' : 'Split (optional)'}
+            {splits.length > 0 && <span style={{ fontSize: '0.75rem', marginLeft: '0.5rem', opacity: 0.6 }}>({splits.length})</span>}
+          </label>
+          <select
+            value={selectedSplitId}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setSelectedSplitId(newValue);
+              console.log('🎯 Split selection changed:', {
+                newValue,
+                isString: typeof newValue === 'string',
+                willSaveAs: newValue && newValue !== '' ? newValue : null,
+                availableSplits: splits.length
+              });
+            }}
+            className="workout-input"
+            style={{
+              padding: '0.625rem',
+              fontSize: '0.875rem'
+            }}
+          >
+            <option value="">{language === 'pl' ? 'Brak - Ogólne' : 'None - General'}</option>
+            {splits.map(split => (
+              <option key={split.id} value={String(split.id)}>
+                {split.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="exercises">
           {exercises.map((exercise, index) => (
             <div key={index} className="exercise-row">

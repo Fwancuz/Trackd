@@ -46,6 +46,7 @@ const App = () => {
     }
   });
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [templatesRefreshKey, setTemplatesRefreshKey] = useState(0);
 
   // Check for verified parameter and reset-password route in URL
   useEffect(() => {
@@ -197,6 +198,10 @@ const App = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const refreshTemplates = () => {
+    setTemplatesRefreshKey(prev => prev + 1);
+  };
 
   const addWorkout = async (workout) => {
     try {
@@ -367,8 +372,8 @@ const App = () => {
   // to avoid infinite loops. It's a stable function defined in component scope.
 
   const pages = {
-    home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} personalRecords={personalRecords} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} recoveredSession={recoveredSession} userId={user?.id} onRefreshCompletedSessions={fetchCompletedSessions} onEditTemplate={setEditingTemplate} onNavigateToCreate={() => setCurrentPage('create')} />,
-    create: <CreateWorkout addWorkout={addWorkout} language={language} editingTemplate={editingTemplate} onEditComplete={() => setEditingTemplate(null)} />,
+    home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} personalRecords={personalRecords} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} recoveredSession={recoveredSession} userId={user?.id} onRefreshCompletedSessions={fetchCompletedSessions} onEditTemplate={setEditingTemplate} onNavigateToCreate={() => setCurrentPage('create')} templatesRefreshKey={templatesRefreshKey} />,
+    create: <CreateWorkout addWorkout={addWorkout} language={language} editingTemplate={editingTemplate} onEditComplete={() => { setEditingTemplate(null); setCurrentPage('home'); }} userId={user?.id} onRefreshTemplates={refreshTemplates} />,
     records: <PR personalRecords={personalRecords} onAddPR={addPersonalRecord} onDeletePR={deletePersonalRecord} language={language} />,
     settings: <AppSettings settings={settings} updateSettings={updateSettings} logout={logout} onResetStats={handleResetStats} onFetchSessions={fetchCompletedSessions} language={language} />,
   };
