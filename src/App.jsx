@@ -1,13 +1,12 @@
 import React, { useState, useEffect, startTransition } from 'react'
-import { VscHome, VscArchive, VscSettingsGear, VscSymbolMisc } from 'react-icons/vsc';
+import { VscHome, VscAdd, VscSettingsGear } from 'react-icons/vsc';
+import { Dumbbell } from 'lucide-react';
 import Home from './Home';
 import CreateWorkout from './CreateWorkout';
 import AppSettings from './AppSettings';
 import PR from './PR';
 import Verified from './Verified';
 import ResetPassword from './ResetPassword';
-import { ToastProvider } from './ToastContext';
-import ThemeProvider from './ThemeContext';
 import { useAuth } from './AuthProvider';
 import { supabase } from './supabaseClient';
 
@@ -20,7 +19,6 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [isVerified, setIsVerified] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
-  const [savedWorkoutTemplates, setSavedWorkoutTemplates] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
   const [personalRecords, setPersonalRecords] = useState([]);
   const [language, setLanguage] = useState('en');
@@ -120,7 +118,6 @@ const App = () => {
       // Clear sensitive user data from memory to prevent data leakage between users
       setCompletedSessions([]);
       setPersonalRecords([]);
-      setSavedWorkoutTemplates([]);
       setSettings({ language: 'en' });
       setLanguage('en');
     }
@@ -148,15 +145,6 @@ const App = () => {
     try {
       setLoading(true);
       
-      // Load saved workout templates
-      const { data: templatesData, error: templatesError } = await supabase
-        .from('workout_templates')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      if (templatesError) throw templatesError;
-      setSavedWorkoutTemplates(templatesData || []);
-
       // Load completed sessions
       await fetchCompletedSessions();
 
@@ -203,26 +191,6 @@ const App = () => {
     setTemplatesRefreshKey(prev => prev + 1);
   };
 
-  const addWorkout = async (workout) => {
-    try {
-      const workoutToSave = {
-        user_id: user.id,
-        name: workout.name,
-        exercises: workout.exercises,
-      };
-
-      const { data, error } = await supabase
-        .from('workout_templates')
-        .insert([workoutToSave])
-        .select();
-
-      if (error) throw error;
-      setSavedWorkoutTemplates(prev => [...prev, data[0]]);
-    } catch (error) {
-      console.error('Error saving workout:', error);
-    }
-  };
-
   const completeWorkoutSession = async (workoutId, exerciseData, duration = 0) => {
     try {
       // Only save columns that exist in the database
@@ -241,29 +209,11 @@ const App = () => {
 
       if (error) throw error;
       
-      // Update local state for immediate UI feedback
-      setCompletedSessions([data[0], ...completedSessions]);
-      
-      // Fetch latest sessions to sync UI
+      // Fetch latest sessions to sync UI with database (single source of truth)
       await fetchCompletedSessions();
       
     } catch (error) {
       console.error('Error saving workout session:', error);
-    }
-  };
-
-  const removeWorkout = async (workoutId) => {
-    try {
-      const { error } = await supabase
-        .from('workout_templates')
-        .delete()
-        .eq('id', workoutId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      setSavedWorkoutTemplates(savedWorkoutTemplates.filter(w => w.id !== workoutId));
-    } catch (error) {
-      console.error('Error deleting workout:', error);
     }
   };
 
@@ -372,8 +322,8 @@ const App = () => {
   // to avoid infinite loops. It's a stable function defined in component scope.
 
   const pages = {
-    home: <Home savedWorkouts={savedWorkoutTemplates} completedSessions={completedSessions} personalRecords={personalRecords} onWorkoutComplete={completeWorkoutSession} language={language} onRemoveWorkout={removeWorkout} recoveredSession={recoveredSession} userId={user?.id} onRefreshCompletedSessions={fetchCompletedSessions} onEditTemplate={setEditingTemplate} onNavigateToCreate={() => setCurrentPage('create')} templatesRefreshKey={templatesRefreshKey} />,
-    create: <CreateWorkout addWorkout={addWorkout} language={language} editingTemplate={editingTemplate} onEditComplete={() => { setEditingTemplate(null); setCurrentPage('home'); }} userId={user?.id} onRefreshTemplates={refreshTemplates} />,
+    home: <Home completedSessions={completedSessions} personalRecords={personalRecords} onWorkoutComplete={completeWorkoutSession} language={language} recoveredSession={recoveredSession} userId={user?.id} onRefreshCompletedSessions={fetchCompletedSessions} onEditTemplate={setEditingTemplate} onNavigateToCreate={() => setCurrentPage('create')} templatesRefreshKey={templatesRefreshKey} />,
+    create: <CreateWorkout language={language} editingTemplate={editingTemplate} onEditComplete={() => { setEditingTemplate(null); setCurrentPage('home'); }} userId={user?.id} onRefreshTemplates={refreshTemplates} />,
     records: <PR personalRecords={personalRecords} onAddPR={addPersonalRecord} onDeletePR={deletePersonalRecord} language={language} />,
     settings: <AppSettings settings={settings} updateSettings={updateSettings} logout={logout} onResetStats={handleResetStats} onFetchSessions={fetchCompletedSessions} language={language} />,
   };
@@ -408,19 +358,17 @@ const App = () => {
   }
 
   return (
-    <ToastProvider>
-      <ThemeProvider user={user}>
-        <div key="main-container" className="app-main relative overflow-hidden min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
-          {/* Deep Space background with dynamic blur elements */}
-          <div className="pointer-events-none fixed inset-0 -z-10">
-            <div style={{ 
-              backgroundColor: `var(--accent)/10`,
-              opacity: '0.3'
-            }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
-            <div style={{ 
-              backgroundColor: `var(--accent)/10`,
-              opacity: '0.2'
-            }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+    <div key="main-container" className="app-main relative overflow-hidden min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
+      {/* Deep Space background with dynamic blur elements */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div style={{ 
+          backgroundColor: `var(--accent)/10`,
+          opacity: '0.3'
+        }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+        <div style={{ 
+          backgroundColor: `var(--accent)/10`,
+          opacity: '0.2'
+        }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
           </div>
           <div key={`page-${currentPage}`}>
             {pages[currentPage]}
@@ -431,11 +379,11 @@ const App = () => {
               <span className="nav-label">Home</span>
             </div>
             <div className="nav-item" onClick={() => setCurrentPage('create')}>
-              <span className="nav-icon"><VscArchive size={18} /></span>
+              <span className="nav-icon"><VscAdd size={18} /></span>
               <span className="nav-label">Create</span>
             </div>
             <div className="nav-item" onClick={() => setCurrentPage('records')}>
-              <span className="nav-icon"><VscSymbolMisc size={18} /></span>
+              <span className="nav-icon"><Dumbbell size={18} /></span>
               <span className="nav-label">Records</span>
             </div>
             <div className="nav-item" onClick={() => setCurrentPage('settings')}>
@@ -444,8 +392,6 @@ const App = () => {
             </div>
           </nav>
         </div>
-      </ThemeProvider>
-    </ToastProvider>
   )
 }
 

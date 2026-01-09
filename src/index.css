@@ -62,7 +62,7 @@ html.theme-metal body {
   --card: #1a0505;
   --text: #ffffff;
   --text-muted: #991b1b;
-  --accent-rgb: 255, 0, 0;
+  --accent-rgb: 185, 28, 28;
   --accent: rgb(var(--accent-rgb));
   --border: #6b1818;
 }
@@ -1423,8 +1423,8 @@ select.exercise-input option:hover {
   gap: 1rem;
   margin: 2rem 0;
   padding: 1.5rem;
-  background-color: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background-color: rgba(var(--info-rgb), 0.15);
+  border: 1px solid rgba(var(--info-rgb), 0.3);
   border-radius: 1rem;
 }
 
@@ -1482,7 +1482,7 @@ select.exercise-input option:hover {
 .workout-card:hover {
   background-color: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 20px rgba(var(--info-rgb), 0.1);
 }
 
 .workout-card-header {
@@ -1700,13 +1700,13 @@ select.exercise-input option:hover {
 
 .exercises-count-badge {
   display: inline-block;
-  background: rgba(59, 130, 246, 0.2);
-  color: rgba(59, 130, 246, 0.9);
+  background: rgba(var(--info-rgb), 0.2);
+  color: rgba(var(--info-rgb), 0.9);
   padding: 0.25rem 0.625rem;
   border-radius: 0.375rem;
   font-size: 0.75rem;
   font-weight: 500;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(var(--info-rgb), 0.3);
 }
 
 .template-actions {
@@ -1828,7 +1828,7 @@ select.exercise-input option:hover {
 .exercise-select-btn {
   background-color: rgba(255, 255, 255, 0.08);
   color: white;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(var(--info-rgb), 0.3);
   padding: 1rem;
   border-radius: 0.75rem;
   cursor: pointer;
@@ -1846,8 +1846,8 @@ select.exercise-input option:hover {
 
 .exercise-select-btn:hover {
   background-color: rgba(255, 255, 255, 0.12);
-  border-color: rgba(59, 130, 246, 0.6);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  border-color: rgba(var(--info-rgb), 0.6);
+  box-shadow: 0 0 15px rgba(var(--info-rgb), 0.2);
   transform: translateY(-2px);
 }
 
@@ -2415,6 +2415,12 @@ select.exercise-input option:hover {
   backdrop-filter: blur(8px);
 }
 
+html.theme-metal .stat-badge {
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.25) 0%, rgba(127, 29, 29, 0.15) 100%);
+  border: 1.5px solid rgba(185, 28, 28, 0.4);
+  box-shadow: 0 0 8px rgba(153, 27, 27, 0.3);
+}
+
 .stat-icon {
   color: var(--accent)/80;
   flex-shrink: 0;
@@ -2426,6 +2432,11 @@ select.exercise-input option:hover {
   color: var(--accent);
   font-family: 'Courier New', monospace;
   letter-spacing: 0.05em;
+}
+
+html.theme-metal .stat-value {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(153, 27, 27, 0.6);
 }
 
 .cancel-btn {
@@ -3128,6 +3139,29 @@ select.exercise-input option:hover {
   letter-spacing: 0.05em;
 }
 
+.rank-name.yeah-buddy-glow {
+  color: #fbbf24;
+  text-shadow: 0 0 10px #fbbf24, 0 0 20px #f59e0b;
+  animation: goldGlow 2s ease-in-out infinite;
+}
+
+.next-rank-name.yeah-buddy-glow {
+  color: #fbbf24;
+  text-shadow: 0 0 10px #fbbf24, 0 0 20px #f59e0b;
+  animation: goldGlow 2s ease-in-out infinite;
+}
+
+@keyframes goldGlow {
+  0%, 100% {
+    color: #fbbf24;
+    text-shadow: 0 0 10px #fbbf24, 0 0 20px #f59e0b;
+  }
+  50% {
+    color: #fcd34d;
+    text-shadow: 0 0 15px #fcd34d, 0 0 30px #fbbf24;
+  }
+}
+
 .next-rank-info {
   display: flex;
   align-items: center;
@@ -3261,10 +3295,16 @@ select.exercise-input option:hover {
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, rgba(123, 58, 237, 0.4) 0%, rgba(236, 72, 153, 0.4) 100%);
-  border-color: rgba(123, 58, 237, 0.6);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.25) 0%, rgba(var(--accent-rgb), 0.15) 100%);
+  border-color: rgba(var(--accent-rgb), 0.6);
   color: white;
-  box-shadow: 0 0 20px rgba(123, 58, 237, 0.3);
+  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.3);
+}
+
+html.theme-metal .tab-button.active {
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.5) 0%, rgba(127, 29, 29, 0.35) 100%);
+  border-color: rgba(185, 28, 28, 0.8);
+  box-shadow: 0 0 15px rgba(153, 27, 27, 0.6), inset 0 0 10px rgba(153, 27, 27, 0.3);
 }
 
 .tab-button svg {
@@ -3303,23 +3343,29 @@ select.exercise-input option:hover {
 
 .total-lifted-card {
   backdrop-filter: blur(12px);
-  background: linear-gradient(135deg, rgba(123, 58, 237, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
-  border: 2px solid rgba(123, 58, 237, 0.3);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15) 0%, rgba(var(--accent-rgb), 0.1) 100%);
+  border: 2px solid rgba(var(--accent-rgb), 0.3);
   border-radius: 1.5rem;
   padding: 3rem 2rem;
   text-align: center;
-  box-shadow: 0 8px 32px 0 rgba(123, 58, 237, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(var(--accent-rgb), 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
 }
 
+html.theme-metal .total-lifted-card {
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.2) 0%, rgba(127, 29, 29, 0.1) 100%);
+  border-color: rgba(185, 28, 28, 0.5);
+  box-shadow: 0 8px 32px 0 rgba(153, 27, 27, 0.3), 0 0 20px rgba(153, 27, 27, 0.2);
+}
+
 .total-lifted-value {
   font-size: clamp(3rem, 10vw, 5rem);
   font-weight: 900;
   letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #ec4899 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, rgba(var(--accent-rgb), 0.7) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -3364,14 +3410,20 @@ select.exercise-input option:hover {
 
 .stat-box:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(123, 58, 237, 0.4);
+  border-color: rgba(var(--accent-rgb), 0.4);
   transform: translateY(-4px);
+}
+
+html.theme-metal .stat-box:hover {
+  border-color: rgba(185, 28, 28, 0.7);
+  background: rgba(153, 27, 27, 0.15);
+  box-shadow: 0 0 15px rgba(153, 27, 27, 0.4);
 }
 
 .stat-value {
   font-size: 2rem;
   font-weight: 900;
-  background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, rgba(var(--accent-rgb), 0.8) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

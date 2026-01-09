@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import AuthProvider from './AuthProvider.jsx'
+import ThemeProvider from './ThemeContext.jsx'
+import { ToastProvider } from './ToastContext.jsx'
 
 // Global error interceptor for removeChild errors caused by aggressive tab freezing
 window.addEventListener('error', (e) => {
@@ -13,8 +15,12 @@ window.addEventListener('error', (e) => {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   </StrictMode>,
 )

@@ -9,7 +9,7 @@ import { supabase, fetchUserSplits, assignTemplateToSplit } from './supabaseClie
 import appLogoTransparent from './assets/logonewtransparent.png';
 import appLogoMetal from './assets/logometal.png';
 
-const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, onEditComplete = null, userId = null, onRefreshTemplates = null }) => {
+const CreateWorkout = ({ language = 'en', editingTemplate = null, onEditComplete = null, userId = null, onRefreshTemplates = null }) => {
   const [workoutName, setWorkoutName] = useState('');
   const [exercises, setExercises] = useState([{ name: '', sets: '', reps: '', weight: '' }]);
   const [isEditing, setIsEditing] = useState(false);
@@ -156,13 +156,9 @@ const CreateWorkout = ({ addWorkout, language = 'en', editingTemplate = null, on
           setSelectedSplitId('');
           
           // Refresh templates to reflect changes in Home screen
+          // This will automatically fetch the new workout from the database
           if (onRefreshTemplates) {
             onRefreshTemplates();
-          }
-          
-          // Call the addWorkout callback if provided
-          if (addWorkout && data) {
-            addWorkout(data);
           }
           
           // Call completion callback

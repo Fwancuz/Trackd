@@ -363,9 +363,22 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
   };
 
   // Calculate total lifetime volume using useMemo
+  // Also filters out duplicate sessions by ID to prevent double-counting volume
   const { totalLifetimeVolume, totalSessions } = useMemo(() => {
     let total = 0;
-    completedSessions.forEach(session => {
+    
+    // Remove duplicate sessions by ID (safety check for race conditions)
+    const seen = new Set();
+    const uniqueSessions = completedSessions.filter(session => {
+      if (seen.has(session.id)) {
+        console.warn(`Duplicate session ID detected: ${session.id}, filtering out`);
+        return false;
+      }
+      seen.add(session.id);
+      return true;
+    });
+    
+    uniqueSessions.forEach(session => {
       if (session.exercises) {
         // Handle new structure where exercises = {name: '...', data: [...]}
         let exercisesData = session.exercises;
@@ -391,7 +404,7 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
     });
     return {
       totalLifetimeVolume: total,
-      totalSessions: completedSessions.length
+      totalSessions: uniqueSessions.length
     };
   }, [completedSessions]);
 
@@ -405,24 +418,32 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
   const RankIcon = ({ tier }) => {
     const iconProps = { size: 20, strokeWidth: 1.5 };
     switch(tier) {
-      case 'bronze': return <Medal color={themeInfo.bronze || '#cd7f32'} {...iconProps} />;
-      case 'silver': return <Medal color={themeInfo.silver || '#c0c0c0'} {...iconProps} />;
-      case 'gold': return <Medal color={themeInfo.gold || '#ffd700'} {...iconProps} />;
-      case 'platinum': return <Trophy color={themeInfo.platinum || '#e5e7eb'} {...iconProps} />;
-      case 'diamond': return <Zap color={themeInfo.diamond || '#7dd3fc'} {...iconProps} />;
-      case 'titan': return <Zap color={themeInfo.titan || '#a78bfa'} {...iconProps} />;
+      case 'novice': return <Medal color={themeInfo.novice || '#8b7355'} {...iconProps} />;
+      case 'beginner': return <Medal color={themeInfo.beginner || '#cd7f32'} {...iconProps} />;
+      case 'amateur': return <Medal color={themeInfo.amateur || '#c0c0c0'} {...iconProps} />;
+      case 'intermediate': return <Medal color={themeInfo.intermediate || '#ffd700'} {...iconProps} />;
+      case 'skilled': return <Trophy color={themeInfo.skilled || '#e5e7eb'} {...iconProps} />;
+      case 'advanced': return <Zap color={themeInfo.advanced || '#7dd3fc'} {...iconProps} />;
+      case 'expert': return <Zap color={themeInfo.expert || '#a78bfa'} {...iconProps} />;
+      case 'elite': return <Zap color={themeInfo.elite || '#ff1493'} {...iconProps} />;
+      case 'master': return <Zap color={themeInfo.master || '#ffd700'} {...iconProps} />;
+      case 'yeah_buddy': return <Zap color={themeInfo.yeah_buddy || '#ff0000'} {...iconProps} />;
       default: return null;
     }
   };
 
-  // Determine current rank
+  // Determine current rank - Updated rank system based on Total Volume
   const ranks = [
-    { name: { en: 'Bronze', pl: 'Brąz' }, tier: 'bronze', min: 0, max: 1000 },
-    { name: { en: 'Silver', pl: 'Srebro' }, tier: 'silver', min: 1000, max: 6000 },
-    { name: { en: 'Gold', pl: 'Złoto' }, tier: 'gold', min: 6000, max: 41000 },
-    { name: { en: 'Platinum', pl: 'Platyna' }, tier: 'platinum', min: 41000, max: 100000 },
-    { name: { en: 'Diamond', pl: 'Diament' }, tier: 'diamond', min: 100000, max: 204000 },
-    { name: { en: 'Titan', pl: 'Tytan' }, tier: 'titan', min: 204000, max: Infinity },
+    { name: { en: 'Novice', pl: 'Nowicjusz' }, tier: 'novice', min: 0, max: 1000 },
+    { name: { en: 'Beginner', pl: 'Początkujący' }, tier: 'beginner', min: 1000, max: 5000 },
+    { name: { en: 'Amateur', pl: 'Amator' }, tier: 'amateur', min: 5000, max: 15000 },
+    { name: { en: 'Intermediate', pl: 'Średniozaawansowany' }, tier: 'intermediate', min: 15000, max: 40000 },
+    { name: { en: 'Skilled', pl: 'Zaawansowany' }, tier: 'skilled', min: 40000, max: 80000 },
+    { name: { en: 'Advanced', pl: 'Zaawansowany+' }, tier: 'advanced', min: 80000, max: 150000 },
+    { name: { en: 'Expert', pl: 'Ekspert' }, tier: 'expert', min: 150000, max: 300000 },
+    { name: { en: 'Elite', pl: 'Elita' }, tier: 'elite', min: 300000, max: 600000 },
+    { name: { en: 'Master', pl: 'Mistrz' }, tier: 'master', min: 600000, max: 1000000 },
+    { name: { en: 'YEAH BUDDY!', pl: 'YEAH BUDDY!' }, tier: 'yeah_buddy', min: 1000000, max: Infinity },
   ];
 
   const currentRank = useMemo(() => {
@@ -443,6 +464,7 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
 
   /**
    * Group templates by split and organize data
+   * Also filters out duplicate templates by ID to prevent UI duplication
    */
   const groupedTemplates = useMemo(() => {
     const groups = {};
@@ -461,8 +483,19 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
       templates: []
     };
     
+    // Remove duplicate templates by ID (safety check for race conditions)
+    const seen = new Set();
+    const uniqueTemplates = templates.filter(template => {
+      if (seen.has(template.id)) {
+        console.warn(`Duplicate template ID detected: ${template.id}, filtering out`);
+        return false;
+      }
+      seen.add(template.id);
+      return true;
+    });
+    
     // Group templates
-    templates.forEach(template => {
+    uniqueTemplates.forEach(template => {
       if (template.split_id && groups[template.split_id]) {
         groups[template.split_id].templates.push(template);
       } else {
@@ -542,7 +575,7 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
             <div className="boss-bar-header">
               <div className="current-rank-display">
                 <RankIcon tier={currentRank.tier} />
-                <span className="rank-name">{currentRank.name[language]}</span>
+                <span className={`rank-name ${currentRank.tier === 'yeah_buddy' ? 'yeah-buddy-glow' : ''}`}>{currentRank.name[language]}</span>
               </div>
               {nextRank && (
                 <div className={`next-rank-info ${showCompletionMessage ? 'show-success' : ''}`}>
@@ -557,7 +590,7 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
                   ) : (
                     <>
                       <span className="next-label">{language === 'pl' ? 'Następna Ranga' : 'Next Rank'}:</span>
-                      <span className="next-rank-name">{nextRank.name[language]} ({rankProgress.toFixed(0)}%)</span>
+                      <span className={`next-rank-name ${nextRank.tier === 'yeah_buddy' ? 'yeah-buddy-glow' : ''}`}>{nextRank.name[language]} ({rankProgress.toFixed(0)}%)</span>
                     </>
                   )}
                 </div>

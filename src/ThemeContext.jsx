@@ -52,10 +52,34 @@ const THEME_OPTIONS = {
   }
 };
 
-const ThemeProvider = ({ children, user }) => {
+const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('classic');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+
+  // Get user from auth on mount
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+      } catch (err) {
+        console.error('Error getting user:', err);
+      }
+    };
+    
+    getUser();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Fetch theme from database on mount or user change
   useEffect(() => {
