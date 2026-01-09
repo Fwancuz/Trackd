@@ -440,8 +440,21 @@ export const redeemFriendCode = async (code) => {
       console.error('Error checking existing friendship:', checkError);
     }
 
+    // If friendship already exists, return success to prevent duplicate errors
     if (existingFriendship) {
-      throw new Error('Already friends with this user');
+      // Fetch the friend profile to return for UI consistency
+      const { data: friendProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .eq('id', inviterId)
+        .single();
+
+      return { 
+        success: true, 
+        message: 'Already friends with this user',
+        isDuplicate: true,
+        friend: profileError ? { id: inviterId, username: 'Friend' } : friendProfile
+      };
     }
 
     // Insert into friendships table to establish connection

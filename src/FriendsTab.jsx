@@ -205,9 +205,9 @@ const FriendsTab = ({ userId, language = 'en' }) => {
           setTimeout(() => setHighlightedFriendId(null), 3000);
         }
         
-        // Refresh the full list in background and check live friends
-        loadFriends();
-        refreshLiveFriends();
+        // Refresh the full list and check live friends - await to ensure RLS permits queries
+        await loadFriends();
+        await refreshLiveFriends();
       } else {
         showError(result.error || 'Failed to redeem friend code');
       }
