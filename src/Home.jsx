@@ -654,10 +654,33 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
           </button>
           <button
             className={`tab-button ${activeTab === 'friends' ? 'active' : ''}`}
-            onClick={() => setActiveTab('friends')}
+            onClick={() => {
+              // Feature-gate: Show toast instead of navigating
+              showToast?.error?.('Social features coming soon!');
+            }}
+            disabled
+            style={{
+              opacity: 0.5,
+              cursor: 'not-allowed',
+              pointerEvents: 'none',
+              position: 'relative'
+            }}
           >
             <Users size={20} strokeWidth={1.5} />
             <span className="tab-label">{language === 'pl' ? 'Znajomi' : 'Friends'}</span>
+            <span style={{
+              position: 'absolute',
+              top: '-8px',
+              right: '-8px',
+              backgroundColor: 'var(--accent)',
+              color: 'white',
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              fontWeight: 'bold'
+            }}>
+              Soon
+            </span>
           </button>
         </div>
 

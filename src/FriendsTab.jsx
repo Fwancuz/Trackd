@@ -282,7 +282,48 @@ const FriendsTab = ({ userId, language = 'en' }) => {
   const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
 
   return (
-    <div style={{ backgroundColor: bgColor, color: textColor }} className="w-full h-full p-4 overflow-y-auto">
+    <div style={{ backgroundColor: bgColor, color: textColor }} className="w-full h-full p-4 overflow-y-auto relative">
+      {/* Coming Soon Overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          borderRadius: '8px'
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: 'var(--card)',
+            border: '2px solid var(--accent)',
+            padding: '2rem',
+            borderRadius: '12px',
+            textAlign: 'center',
+            maxWidth: '300px'
+          }}
+        >
+          <h2 style={{ color: 'var(--text)', marginBottom: '1rem' }} className="text-2xl font-bold">
+            Coming Soon
+          </h2>
+          <p style={{ color: 'var(--accent)', marginBottom: '0.5rem' }} className="text-lg font-semibold">
+            Social Features
+          </p>
+          <p style={{ color: 'var(--muted-color)' }} className="text-sm">
+            We're working on connecting you with your workout buddies. Stay tuned!
+          </p>
+        </div>
+      </div>
+
+      {/* Blurred Content */}
+      <div style={{ filter: 'blur(4px)', pointerEvents: 'none', userSelect: 'none' }}>
       {/* Section Navigation */}
       <div style={{ borderColor }} className="flex gap-2 mb-6 border-b">
         <button
@@ -602,6 +643,7 @@ const FriendsTab = ({ userId, language = 'en' }) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
