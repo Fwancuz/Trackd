@@ -7,7 +7,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Please check your .env file.');
 }
 
+// Create Supabase client with anon key (supports RPC calls with proper auth)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Verify client initialization
+console.log('Supabase client initialized:', {
+  url: supabaseUrl ? '✓ URL configured' : '✗ URL missing',
+  auth: supabaseAnonKey ? '✓ Anon key configured' : '✗ Anon key missing'
+});
 
 // ============================================
 // WORKOUT SPLITS CRUD OPERATIONS

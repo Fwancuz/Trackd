@@ -7,18 +7,101 @@ import MoreMenu from './MoreMenu';
 import { useToast } from './ToastContext';
 import { useRestTimer } from './useRestTimer';
 import RestTimerOverlay from './RestTimerOverlay';
+import { supabase } from './supabaseClient';
 
 // Session Recovery Storage Key
 const STORAGE_KEY = 'trackd_active_session';
 
 const getNow = () => Date.now();
 
-const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recoveredSession = null }) => {
+const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recoveredSession = null, userId = null }) => {
   const isValidSessionData = (data) => {
     const hasWorkoutName = typeof data?.workoutName === 'string' && data.workoutName.trim().length > 0;
     const hasExerciseSets = Array.isArray(data?.exerciseSets) && data.exerciseSets.length > 0;
     const hasSetsArrays = hasExerciseSets && data.exerciseSets.every((ex) => Array.isArray(ex?.sets));
     return hasWorkoutName && hasExerciseSets && hasSetsArrays;
+  };
+
+  // ============================================
+  // LIVE STATUS FUNCTIONS
+  // ============================================
+
+  /**
+   * Update live status in user_settings
+   * Called on workout start and via heartbeat
+   */
+  const updateLiveStatus = async (isActive) => {
+    if (!userId) return; // Skip if no user ID
+
+    try {
+      if (isActive) {
+        // Calculate duration
+        const durationSeconds = Math.floor((Date.now() - workoutStartTime) / 1000);
+        const totalExercises = exerciseSets.length;
+        const completedExercises = exerciseSets.filter(ex =>
+          ex.sets && ex.sets.some(set => set.completed)
+        ).length;
+
+        const activeWorkoutData = {
+          template_id: workout.id || 0,
+          workout_name: workout.name,
+          start_time: new Date(workoutStartTime).toISOString(),
+          current_exercise_index: currentExerciseIndex,
+          current_set_index: currentSetIndex,
+          duration_seconds: durationSeconds,
+          total_exercises: totalExercises,
+          completed_exercises: completedExercises,
+        };
+
+        const { error } = await supabase
+          .from('user_settings')
+          .update({
+            active_workout_data: activeWorkoutData,
+            last_active_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('Error updating live status:', error);
+        }
+      } else {
+        // Clear live status
+        const { error } = await supabase
+          .from('user_settings')
+          .update({
+            active_workout_data: null,
+            last_active_at: null,
+          })
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('Error clearing live status:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error in updateLiveStatus:', error);
+    }
+  };
+
+  /**
+   * Restore live status from localStorage on mount
+   * Used when session is recovered
+   */
+  const restoreLiveStatusFromStorage = async () => {
+    if (!userId) return;
+
+    try {
+      const savedSession = localStorage.getItem(STORAGE_KEY);
+      if (savedSession) {
+        const sessionData = JSON.parse(savedSession);
+        if (isValidSessionData(sessionData)) {
+          // Restore the live status to database
+          await updateLiveStatus(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error restoring live status:', error);
+    }
   };
 
   // Initialize state with recovered session or new workout
@@ -73,6 +156,30 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
     }, 1000);
     return () => clearInterval(interval);
   }, [workoutStartTime]);
+
+  // ============================================
+  // LIVE STATUS: Heartbeat - Update every 60 seconds
+  // ============================================
+  useEffect(() => {
+    if (!userId) return;
+
+    // Update immediately on start
+    updateLiveStatus(true);
+
+    // Then update every 60 seconds
+    const heartbeatInterval = setInterval(() => {
+      updateLiveStatus(true);
+    }, 60000); // 60 seconds
+
+    return () => clearInterval(heartbeatInterval);
+  }, [userId, workoutStartTime]); // Re-run if userId or workoutStartTime changes
+
+  // ============================================
+  // LIVE STATUS: Restore from localStorage on mount/recovery
+  // ============================================
+  useEffect(() => {
+    restoreLiveStatusFromStorage();
+  }, [userId, recoveredSession]); // Run on mount or when recovered session changes
 
   // Persist workout state to localStorage whenever it changes
   useEffect(() => {
@@ -149,6 +256,20 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
       return () => clearTimeout(timeoutId);
     }
   }, [timer.timeLeft, restTimerActive]);
+
+  // ============================================
+  // CLEANUP: Clear live status on unmount or if userId changes
+  // ============================================
+  useEffect(() => {
+    return () => {
+      // Clear live status when component unmounts
+      if (userId) {
+        updateLiveStatus(false).catch(error => {
+          console.error('Error clearing live status on unmount:', error);
+        });
+      }
+    };
+  }, [userId]);
 
   const currentExercise = exerciseSets?.[currentExerciseIndex];
 
@@ -227,13 +348,25 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
       data: formattedData
     };
     
-    // Clear session from localStorage (hard clear first)
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      window.dispatchEvent(new Event('storage'));
-    } catch (error) {
-      console.error('Error clearing session from localStorage:', error);
-    }
+    // Clear live status from database BEFORE clearing localStorage
+    updateLiveStatus(false).then(() => {
+      // Clear session from localStorage (hard clear first)
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        window.dispatchEvent(new Event('storage'));
+      } catch (error) {
+        console.error('Error clearing session from localStorage:', error);
+      }
+    }).catch(error => {
+      console.error('Error clearing live status:', error);
+      // Still clear localStorage even if database update fails
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        window.dispatchEvent(new Event('storage'));
+      } catch (e) {
+        console.error('Error clearing session from localStorage:', e);
+      }
+    });
     
     onComplete(exercisesWithMetadata, workoutDuration, workoutName, totalVolume);
     success(t.workoutCompleted || 'Workout completed!');
@@ -268,13 +401,25 @@ const WorkoutPlayer = ({ workout, onComplete, onCancel, language = 'en', recover
   };
 
   const handleCancelWorkout = () => {
-    // Clear session from localStorage (hard clear first)
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      window.dispatchEvent(new Event('storage'));
-    } catch (error) {
-      console.error('Error clearing session from localStorage:', error);
-    }
+    // Clear live status from database BEFORE clearing localStorage
+    updateLiveStatus(false).then(() => {
+      // Clear session from localStorage (hard clear first)
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        window.dispatchEvent(new Event('storage'));
+      } catch (error) {
+        console.error('Error clearing session from localStorage:', error);
+      }
+    }).catch(error => {
+      console.error('Error clearing live status:', error);
+      // Still clear localStorage even if database update fails
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        window.dispatchEvent(new Event('storage'));
+      } catch (e) {
+        console.error('Error clearing session from localStorage:', e);
+      }
+    });
     
     // Reset all local state to ensure clean state for next session
     const resetState = initializeState();

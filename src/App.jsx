@@ -1,4 +1,5 @@
 import React, { useState, useEffect, startTransition } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { VscHome, VscAdd, VscSettingsGear } from 'react-icons/vsc';
 import { Dumbbell } from 'lucide-react';
 import Home from './Home';
@@ -7,6 +8,7 @@ import AppSettings from './AppSettings';
 import PR from './PR';
 import Verified from './Verified';
 import ResetPassword from './ResetPassword';
+import JoinInviteGroup from './JoinInviteGroup';
 import { useAuth } from './AuthProvider';
 import { supabase } from './supabaseClient';
 
@@ -15,6 +17,7 @@ const STORAGE_KEY = 'trackd_active_session';
 
 const App = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
   const [isVerified, setIsVerified] = useState(false);
@@ -358,18 +361,26 @@ const App = () => {
   }
 
   return (
-    <div key="main-container" className="app-main relative overflow-hidden min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
-      {/* Deep Space background with dynamic blur elements */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div style={{ 
-          backgroundColor: `var(--accent)/10`,
-          opacity: '0.3'
-        }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
-        <div style={{ 
-          backgroundColor: `var(--accent)/10`,
-          opacity: '0.2'
-        }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
-          </div>
+    <Routes>
+      {/* Join invite group route */}
+      <Route path="/join/:code" element={<JoinInviteGroup language={language} />} />
+      
+      {/* Main app routes */}
+      <Route
+        path="/*"
+        element={
+          <div key="main-container" className="app-main relative overflow-hidden min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
+            {/* Deep Space background with dynamic blur elements */}
+            <div className="pointer-events-none fixed inset-0 -z-10">
+              <div style={{ 
+                backgroundColor: `var(--accent)/10`,
+                opacity: '0.3'
+              }} className="w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none fixed -top-48 -left-48" />
+              <div style={{ 
+                backgroundColor: `var(--accent)/10`,
+                opacity: '0.2'
+              }} className="w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none fixed -bottom-32 -right-32" />
+            </div>
           <div key={`page-${currentPage}`}>
             {pages[currentPage]}
           </div>
@@ -392,6 +403,9 @@ const App = () => {
             </div>
           </nav>
         </div>
+        }
+      />
+    </Routes>
   )
 }
 

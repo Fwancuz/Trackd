@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect, startTransition } from 'react';
-import { Medal, Trophy, Zap, Target, History, Clock, Play, Pencil, MoreVertical, Edit2, Trash2, Plus, X as XIcon } from 'lucide-react';
+import { Medal, Trophy, Zap, Target, History, Clock, Play, Pencil, MoreVertical, Edit2, Trash2, Plus, X as XIcon, Users } from 'lucide-react';
 import WorkoutPlayer from './WorkoutPlayer';
 import ConfirmModal from './ConfirmModal';
 import RecentHistory from './RecentHistory';
 import PRStatsWidget from './PRStatsWidget';
 import ActivityHeatmap from './ActivityHeatmap';
+import ActiveFriendsBanner from './ActiveFriendsBanner';
+import FriendsTab from './FriendsTab';
 import MoreMenu from './MoreMenu';
 import translations from './translations';
 import { useToast } from './ToastContext';
@@ -34,7 +36,7 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
     return null;
   });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, workoutId: null, workoutName: '' });
-  const [activeTab, setActiveTab] = useState('plans'); // 'plans', 'history', 'total'
+  const [activeTab, setActiveTab] = useState('plans'); // 'plans', 'history', 'total', 'friends'
   const [lastCompletedVolume, setLastCompletedVolume] = useState(null);
   const [showCompletionMessage, setShowCompletionMessage] = useState(false);
   const [statsRefreshKey, setStatsRefreshKey] = useState(0);
@@ -194,6 +196,19 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
     if (onNavigateToCreate) {
       onNavigateToCreate();
     }
+  };
+
+  /**
+   * Handle joining a friend's workout session
+   */
+  const handleSessionJoined = (clonedSessionData) => {
+    // The session is already stored in localStorage by ActiveFriendsBanner
+    // Just update local state to trigger workout player
+    setActiveWorkout({
+      name: clonedSessionData.workoutName,
+      exercises: [],
+    });
+    success(language === 'pl' ? 'Dołączono do treningu!' : 'Joined workout!');
   };
 
   /**
@@ -553,6 +568,7 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
           }}
           language={language}
           recoveredSession={recoveredSession}
+          userId={userId}
         />
       </div>
     );
@@ -635,6 +651,13 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
           >
             <Zap size={20} strokeWidth={1.5} />
             <span className="tab-label">{language === 'pl' ? 'Statystyki' : 'Stats'}</span>
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'friends' ? 'active' : ''}`}
+            onClick={() => setActiveTab('friends')}
+          >
+            <Users size={20} strokeWidth={1.5} />
+            <span className="tab-label">{language === 'pl' ? 'Znajomi' : 'Friends'}</span>
           </button>
         </div>
 
@@ -766,6 +789,13 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
                     </button>
                   )}
                 </div>
+
+                {/* Active Friends Banner */}
+                <ActiveFriendsBanner
+                  onSessionJoined={handleSessionJoined}
+                  language={language}
+                  userId={userId}
+                />
 
                 {/* Add Split Input */}
                 {showAddSplit && (
@@ -1031,6 +1061,13 @@ const Home = ({ completedSessions, personalRecords = [], onWorkoutComplete, lang
                     onRefreshCompletedSessions();
                   }
                 }}
+              />
+            )}
+
+            {activeTab === 'friends' && (
+              <FriendsTab
+                userId={userId}
+                language={language}
               />
             )}
           </div>
