@@ -184,7 +184,7 @@ const FriendsTab = ({ userId, language = 'en' }) => {
 
     try {
       setRedeeming(true);
-      const result = await redeemFriendCode(redeemCode);
+      const result = await redeemFriendCode(redeemCode.trim().toUpperCase());
 
       if (result.success) {
         success('🎉 Friend Added!');

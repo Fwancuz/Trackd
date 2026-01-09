@@ -191,7 +191,7 @@ export const getFriendsList = async () => {
     // Fetch friend profiles with user details
     const { data: friendProfiles, error: error3 } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url, created_at')
+      .select('id, username, avatar_url')
       .in('id', friendIds);
 
     if (error3) throw error3;
@@ -407,9 +407,9 @@ export const redeemFriendCode = async (code) => {
     // Query friend_invites table for the code
     const { data: inviteData, error: queryError } = await supabase
       .from('friend_invites')
-      .select('id, inviter_id, code')
-      .eq('code', cleanCode)
-      .single();
+      .select('*')
+      .eq('code', cleanCode.toUpperCase())
+      .maybeSingle();
 
     if (queryError) {
       console.error('Error querying friend code:', queryError);

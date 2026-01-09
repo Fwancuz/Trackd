@@ -41,6 +41,7 @@ export const useSocial = (userId, language = 'en') => {
     } catch (err) {
       console.error('Error fetching live friends:', err);
       setError(err.message);
+      setLiveFriends([]); // Ensure empty array on error
     } finally {
       setLoading(false);
     }
@@ -104,6 +105,7 @@ export const useSocial = (userId, language = 'en') => {
     } catch (err) {
       console.error('Error in direct query:', err);
       setError(err.message);
+      setLiveFriends([]); // Ensure empty array on error
     } finally {
       setLoading(false);
     }
