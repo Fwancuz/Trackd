@@ -110,8 +110,10 @@ export const useSocial = (userId, language = 'en') => {
   }, [userId]);
 
   /**
-   * Subscribe to real-time updates on user_settings table
-   * Triggers whenever a friend's active_workout_data changes
+   * Subscribe to real-time updates on user_settings and friendships tables
+   * Triggers whenever:
+   * 1. A friend's active_workout_data changes (user_settings)
+   * 2. A new friendship is added or removed (friendships)
    */
   useEffect(() => {
     if (!userId) {
@@ -123,7 +125,7 @@ export const useSocial = (userId, language = 'en') => {
     fetchLiveFriends();
 
     // Subscribe to changes on user_settings
-    const channel = supabase
+    const userSettingsChannel = supabase
       .channel('live-workouts')
       .on(
         'postgres_changes',
@@ -149,9 +151,53 @@ export const useSocial = (userId, language = 'en') => {
         }
       });
 
-    // Cleanup subscription on unmount
+    // Subscribe to changes on friendships table to detect new friendships immediately
+    const friendshipsChannel = supabase
+      .channel('friendships-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'friendships',
+        },
+        (payload) => {
+          // Refetch live friends when a new friendship is added
+          const newFriendship = payload.new;
+          // Trigger refetch if current user is involved in the new friendship
+          if (newFriendship.requester_id === userId || newFriendship.receiver_id === userId) {
+            console.log('New friendship detected:', payload);
+            fetchLiveFriends();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'friendships',
+        },
+        (payload) => {
+          // Refetch live friends when a friendship is removed
+          const deletedFriendship = payload.old;
+          // Trigger refetch if current user is involved in the deleted friendship
+          if (deletedFriendship.requester_id === userId || deletedFriendship.receiver_id === userId) {
+            console.log('Friendship removed:', payload);
+            fetchLiveFriends();
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Subscribed to friendships changes');
+        }
+      });
+
+    // Cleanup subscriptions on unmount
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(userSettingsChannel);
+      supabase.removeChannel(friendshipsChannel);
     };
   }, [userId, fetchLiveFriends]);
 

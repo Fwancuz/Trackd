@@ -13,6 +13,7 @@ import {
   rejectFriendRequest,
 } from './services/socialService';
 import { useToast } from './ToastContext';
+import { useSocial } from './useSocial';
 import translations from './translations';
 
 const FriendsTab = ({ userId, language = 'en' }) => {
@@ -27,6 +28,7 @@ const FriendsTab = ({ userId, language = 'en' }) => {
   const [redeeming, setRedeeming] = useState(false);
   const [activeSection, setActiveSection] = useState('friends'); // 'friends', 'code', 'requests'
   const { success, error: showError } = useToast();
+  const { refreshLiveFriends } = useSocial(userId);
   const t = translations[language];
 
   /**
@@ -187,7 +189,8 @@ const FriendsTab = ({ userId, language = 'en' }) => {
       if (result.success) {
         success('🎉 Friend Added!');
         setRedeemCode(''); // Clear input
-        loadFriends(); // Refresh friends list
+        loadFriends(); // Refresh friends list locally
+        refreshLiveFriends(); // Update live friends status globally
       } else {
         showError(result.error || 'Failed to redeem friend code');
       }
