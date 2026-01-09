@@ -27,6 +27,7 @@ const FriendsTab = ({ userId, language = 'en' }) => {
   const [redeemCode, setRedeemCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
   const [activeSection, setActiveSection] = useState('friends'); // 'friends', 'code', 'requests'
+  const [highlightedFriendId, setHighlightedFriendId] = useState(null);
   const { success, error: showError } = useToast();
   const { refreshLiveFriends } = useSocial(userId);
   const t = translations[language];
@@ -189,8 +190,24 @@ const FriendsTab = ({ userId, language = 'en' }) => {
       if (result.success) {
         success('🎉 Friend Added!');
         setRedeemCode(''); // Clear input
-        loadFriends(); // Refresh friends list locally
-        refreshLiveFriends(); // Update live friends status globally
+        
+        // Immediately add friend to the list with display name
+        if (result.friend) {
+          const newFriend = {
+            ...result.friend,
+            displayName: result.friend.username,
+            created_at: new Date().toISOString()
+          };
+          setFriends(prev => [...prev, newFriend]);
+          
+          // Highlight the new friend for 3 seconds
+          setHighlightedFriendId(result.friend.id);
+          setTimeout(() => setHighlightedFriendId(null), 3000);
+        }
+        
+        // Refresh the full list in background and check live friends
+        loadFriends();
+        refreshLiveFriends();
       } else {
         showError(result.error || 'Failed to redeem friend code');
       }
@@ -312,9 +329,9 @@ const FriendsTab = ({ userId, language = 'en' }) => {
           ) : friends.length === 0 ? (
             <div style={{ backgroundColor: cardColor, borderColor }} className="border rounded-lg p-6 text-center">
               <Zap style={{ color: accentColor }} className="mx-auto mb-2 w-8 h-8" />
-              <p style={{ color: mutedColor }} className="mb-2">No friends yet!</p>
+              <p style={{ color: textColor }} className="mb-2 font-semibold">Welcome! Enter a friend's code to get started</p>
               <p style={{ color: mutedColor }} className="text-sm">
-                Go to Friend Code tab and share your code to start building your workout group.
+                Go to the Friend Code tab above and enter a code to add your first friend, or share your code with others.
               </p>
             </div>
           ) : (
@@ -322,7 +339,11 @@ const FriendsTab = ({ userId, language = 'en' }) => {
               {friends.map(friend => (
                 <div
                   key={friend.id || friend.friend_id}
-                  style={{ backgroundColor: cardColor, borderColor }}
+                  style={{
+                    backgroundColor: highlightedFriendId === (friend.id || friend.friend_id) ? accentColor + '20' : cardColor,
+                    borderColor: highlightedFriendId === (friend.id || friend.friend_id) ? accentColor : borderColor,
+                    transition: 'all 0.3s ease'
+                  }}
                   className="border rounded-lg p-4 flex items-center justify-between"
                 >
                   <div className="flex-1">

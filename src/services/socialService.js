@@ -420,16 +420,35 @@ export const redeemFriendCode = async (code) => {
       throw new Error('Friend code not found');
     }
 
+    const inviterId = inviteData.inviter_id;
+
     // Check if user is trying to redeem their own code
-    if (inviteData.inviter_id === user.id) {
+    if (inviterId === user.id) {
       throw new Error('Cannot redeem your own friend code');
+    }
+
+    // Check if friendship already exists in either direction
+    const { data: existingFriendship, error: checkError } = await supabase
+      .from('friendships')
+      .select('id, status')
+      .or(
+        `and(requester_id.eq.${inviterId},receiver_id.eq.${user.id}),and(requester_id.eq.${user.id},receiver_id.eq.${inviterId})`
+      )
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking existing friendship:', checkError);
+    }
+
+    if (existingFriendship) {
+      throw new Error('Already friends with this user');
     }
 
     // Insert into friendships table to establish connection
     const { data: friendship, error: insertError } = await supabase
       .from('friendships')
       .insert({
-        requester_id: inviteData.inviter_id,
+        requester_id: inviterId,
         receiver_id: user.id,
         status: 'accepted'
       })
@@ -438,18 +457,33 @@ export const redeemFriendCode = async (code) => {
 
     if (insertError) {
       console.error('Error creating friendship:', insertError);
-      
-      // Check if friendship already exists
-      if (insertError.code === '23505' || insertError.message?.includes('duplicate')) {
-        throw new Error('Already friends with this user');
-      }
       throw insertError;
+    }
+
+    // Fetch the inviter's profile to return full friend data
+    const { data: friendProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .eq('id', inviterId)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching friend profile:', profileError);
+      // Still return success even if profile fetch fails
+      return { 
+        success: true, 
+        message: 'Friend added successfully!',
+        friendshipId: friendship?.id,
+        friend: { id: inviterId, username: 'Friend' }
+      };
     }
 
     return { 
       success: true, 
       message: 'Friend added successfully!',
-      friendshipId: friendship?.id
+      friendshipId: friendship?.id,
+      friend: friendProfile,
+      friendship: friendship
     };
   } catch (error) {
     console.error('Error redeeming friend code:', error);
